@@ -1,0 +1,22 @@
+# .NET derleme çıktıları
+bin/
+obj/
+
+# Yerel geliştirme ortamı ayarları
+.vs/
+.idea/
+*.user
+*.suo
+
+# Yerel SQLite veritabanları ve geçici dosyalar
+Database/*.db
+Database/*.db-journal
+Database/*.db-wal
+Database/*.db-shm
+
+# macOS sistem dosyaları
+.DS_Store
+
+# Windows sistem dosyaları
+Thumbs.db
+Desktop.ini

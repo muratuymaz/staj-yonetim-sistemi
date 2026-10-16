@@ -5,7 +5,7 @@ using StajYonetimSistemi.Data;
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // appsettings.json dosyasındaki veritabanı bağlantı bilgisini okuma
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+string connectionString = builder.Configuration.GetValue<string>("ConnectionStrings:DefaultConnection", "");
 
 // Bağlantı bilgisinin eksik olup olmadığını kontrol etme
 if (string.IsNullOrWhiteSpace(connectionString))
@@ -16,19 +16,20 @@ if (string.IsNullOrWhiteSpace(connectionString))
 SqliteConnectionStringBuilder sqliteConnection = new SqliteConnectionStringBuilder(connectionString);
 
 // Veritabanı yolunu Mac ve Windows'ta kullanılacak tam dosya yoluna çevirme
-string databasePath = Path.GetFullPath(
-    sqliteConnection.DataSource,
-    builder.Environment.ContentRootPath);
+string relativeDatabasePath = sqliteConnection.DataSource;
+string projectPath = builder.Environment.ContentRootPath;
+string databasePath = Path.GetFullPath(relativeDatabasePath, projectPath);
 
 sqliteConnection.DataSource = databasePath;
+string fullConnectionString = sqliteConnection.ToString();
 
 // MVC desteğini ekleme
 builder.Services.AddControllersWithViews();
 
-// AppDbContext için SQLite bağlantısını ayarlama
-builder.Services.AddDbContext<AppDbContext>(options =>
+// StajDbContext için SQLite bağlantısını ayarlama
+builder.Services.AddDbContext<StajDbContext>(options =>
 {
-    options.UseSqlite(sqliteConnection.ToString());
+    options.UseSqlite(fullConnectionString);
 });
 
 WebApplication app = builder.Build();

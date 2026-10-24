@@ -2,14 +2,90 @@ namespace StajYonetimSistemi.Models;
 
 public class Document
 {
-    public int Id { get; set; }
-    public int StudentId { get; set; }
+    private int id;
+    private int studentId;
+    private string originalFileName = "";
+    private string filePath = "";
+    private DateTime uploadedAt = DateTime.UtcNow;
+    private string status = "Uploaded";
+
+    public int Id
+    {
+        get
+        {
+            return id;
+        }
+
+        set
+        {
+            id = value;
+        }
+    }
+
+    public int StudentId
+    {
+        get
+        {
+            return studentId;
+        }
+
+        set
+        {
+            studentId = value;
+        }
+    }
 
     // Yüklenen Ek-16 dosyasının bilgilerini tutma
-    public string OriginalFileName { get; set; } = "";
-    public string FilePath { get; set; } = "";
-    public DateTime UploadedAt { get; set; } = DateTime.UtcNow;
+    public string OriginalFileName
+    {
+        get
+        {
+            return originalFileName;
+        }
+
+        set
+        {
+            originalFileName = value;
+        }
+    }
+
+    public string FilePath
+    {
+        get
+        {
+            return filePath;
+        }
+
+        set
+        {
+            filePath = value;
+        }
+    }
+
+    public DateTime UploadedAt
+    {
+        get
+        {
+            return uploadedAt;
+        }
+
+        set
+        {
+            uploadedAt = value;
+        }
+    }
 
     // Evrak durumunu tutma
-    public string Status { get; set; } = "Uploaded";
+    public string Status
+    {
+        get
+        {
+            return status;
+        }
+
+        set
+        {
+            status = value;
+        }
+    }
 }

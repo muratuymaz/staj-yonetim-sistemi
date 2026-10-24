@@ -3,7 +3,33 @@ namespace StajYonetimSistemi.Models
     // Oturumda gösterilecek kullanıcı bilgilerini tutma
     public class SessionInfo
     {
-        public int UserId { get; set; }
-        public string Role { get; set; } = "";
+        private int userId;
+        private string role = "";
+
+        public int UserId
+        {
+            get
+            {
+                return userId;
+            }
+
+            set
+            {
+                userId = value;
+            }
+        }
+
+        public string Role
+        {
+            get
+            {
+                return role;
+            }
+
+            set
+            {
+                role = value;
+            }
+        }
     }
 }

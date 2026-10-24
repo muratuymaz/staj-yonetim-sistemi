@@ -2,27 +2,191 @@ namespace StajYonetimSistemi.Models;
 
 public class Student
 {
-    public int Id { get; set; }
+    private int id;
+    private int userId;
+    private string studentNumber = "";
+    private string fullName = "";
+    private string identityNumber = "";
+    private string nationality = "";
+    private DateTime birthDate;
+    private string address = "";
+    private string phoneNumber = "";
+    private string department = "";
+    private string academicYear = "";
+    private int previousInternshipDays;
+    private int healthAidStatus;
+
+    public int Id
+    {
+        get
+        {
+            return id;
+        }
+
+        set
+        {
+            id = value;
+        }
+    }
 
     // Öğrenciyi kullanıcı hesabına bağlama
-    public int UserId { get; set; }
+    public int UserId
+    {
+        get
+        {
+            return userId;
+        }
+
+        set
+        {
+            userId = value;
+        }
+    }
 
     // Öğrenci kimlik bilgilerini tutma
-    public string StudentNumber { get; set; } = "";
-    public string FullName { get; set; } = "";
-    public string IdentityNumber { get; set; } = "";
-    public string Nationality { get; set; } = "";
-    public DateTime BirthDate { get; set; }
+    public string StudentNumber
+    {
+        get
+        {
+            return studentNumber;
+        }
+
+        set
+        {
+            studentNumber = value;
+        }
+    }
+
+    public string FullName
+    {
+        get
+        {
+            return fullName;
+        }
+
+        set
+        {
+            fullName = value;
+        }
+    }
+
+    public string IdentityNumber
+    {
+        get
+        {
+            return identityNumber;
+        }
+
+        set
+        {
+            identityNumber = value;
+        }
+    }
+
+    public string Nationality
+    {
+        get
+        {
+            return nationality;
+        }
+
+        set
+        {
+            nationality = value;
+        }
+    }
+
+    public DateTime BirthDate
+    {
+        get
+        {
+            return birthDate;
+        }
+
+        set
+        {
+            birthDate = value;
+        }
+    }
 
     // İletişim bilgilerini tutma, e-postayı User kaydından alma
-    public string Address { get; set; } = "";
-    public string PhoneNumber { get; set; } = "";
+    public string Address
+    {
+        get
+        {
+            return address;
+        }
+
+        set
+        {
+            address = value;
+        }
+    }
+
+    public string PhoneNumber
+    {
+        get
+        {
+            return phoneNumber;
+        }
+
+        set
+        {
+            phoneNumber = value;
+        }
+    }
 
     // Bölüm ve staj bilgilerini tutma
-    public string Department { get; set; } = "";
-    public string AcademicYear { get; set; } = "";
-    public int PreviousInternshipDays { get; set; }
+    public string Department
+    {
+        get
+        {
+            return department;
+        }
+
+        set
+        {
+            department = value;
+        }
+    }
+
+    public string AcademicYear
+    {
+        get
+        {
+            return academicYear;
+        }
+
+        set
+        {
+            academicYear = value;
+        }
+    }
+
+    public int PreviousInternshipDays
+    {
+        get
+        {
+            return previousInternshipDays;
+        }
+
+        set
+        {
+            previousInternshipDays = value;
+        }
+    }
 
     // Sağlık yardımı seçimini tutma
-    public int HealthAidStatus { get; set; }
+    public int HealthAidStatus
+    {
+        get
+        {
+            return healthAidStatus;
+        }
+
+        set
+        {
+            healthAidStatus = value;
+        }
+    }
 }

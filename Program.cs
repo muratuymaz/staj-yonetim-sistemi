@@ -30,6 +30,18 @@ builder.Services.AddControllersWithViews();
 // Şifre işlemlerini kullanıma hazırlama
 builder.Services.AddScoped<PasswordService>();
 
+// Oturum bilgilerini sunucu belleğinde tutma
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.Name = ".Staj.Session";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+});
+
 // StajDbContext için SQLite bağlantısını ayarlama
 builder.Services.AddDbContext<StajDbContext>(options =>
 {
@@ -37,6 +49,10 @@ builder.Services.AddDbContext<StajDbContext>(options =>
 });
 
 WebApplication app = builder.Build();
+
+// Yönlendirme sonrası oturumu kullanıma açma
+app.UseRouting();
+app.UseSession();
 
 // İstekleri controller ve action adına göre yönlendirme
 app.MapControllerRoute(

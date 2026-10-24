@@ -1,6 +1,7 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using StajYonetimSistemi.Data;
+using StajYonetimSistemi.Services;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +26,9 @@ string fullConnectionString = sqliteConnection.ToString();
 
 // MVC desteğini ekleme
 builder.Services.AddControllersWithViews();
+
+// Şifre işlemlerini kullanıma hazırlama
+builder.Services.AddScoped<PasswordService>();
 
 // StajDbContext için SQLite bağlantısını ayarlama
 builder.Services.AddDbContext<StajDbContext>(options =>

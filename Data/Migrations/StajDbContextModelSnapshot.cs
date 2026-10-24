@@ -47,6 +47,33 @@ namespace StajYonetimSistemi.Data.Migrations
                     b.ToTable("Documents");
                 });
 
+            modelBuilder.Entity("StajYonetimSistemi.Models.LoginAttempt", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("AttemptedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FailureReason")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("UserNameOrEmail")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("LoginAttempts");
+                });
+
             modelBuilder.Entity("StajYonetimSistemi.Models.Student", b =>
                 {
                     b.Property<int>("Id")
@@ -159,6 +186,14 @@ namespace StajYonetimSistemi.Data.Migrations
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("StajYonetimSistemi.Models.LoginAttempt", b =>
+                {
+                    b.HasOne("StajYonetimSistemi.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("StajYonetimSistemi.Models.Student", b =>

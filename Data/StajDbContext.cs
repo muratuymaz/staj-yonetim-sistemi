@@ -12,12 +12,14 @@ public class StajDbContext : DbContext
         Users = Set<User>();
         Students = Set<Student>();
         Documents = Set<Document>();
+        LoginAttempts = Set<LoginAttempt>();
     }
 
     // Tabloları tanımlama
     public DbSet<User> Users { get; set; }
     public DbSet<Student> Students { get; set; }
     public DbSet<Document> Documents { get; set; }
+    public DbSet<LoginAttempt> LoginAttempts { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -58,5 +60,12 @@ public class StajDbContext : DbContext
             .WithMany()
             .HasForeignKey(document => document.StudentId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Kullanıcı silinse de giriş kayıtlarını koruma
+        modelBuilder.Entity<LoginAttempt>()
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(attempt => attempt.UserId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

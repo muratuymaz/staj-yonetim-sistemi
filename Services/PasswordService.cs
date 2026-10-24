@@ -5,7 +5,7 @@ namespace StajYonetimSistemi.Services;
 
 public class PasswordService
 {
-    private readonly PasswordHasher<User> passwordHasher;
+    private PasswordHasher<User> passwordHasher;
 
     // Şifre işlemleri için nesne oluşturma
     public PasswordService()

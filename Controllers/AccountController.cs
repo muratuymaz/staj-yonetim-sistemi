@@ -1,105 +1,138 @@
-using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Mvc;
 using StajYonetimSistemi.Data;
+using StajYonetimSistemi.Filters;
 using StajYonetimSistemi.Models;
 using StajYonetimSistemi.Services;
 
-namespace StajYonetimSistemi.Controllers;
-
-public class AccountController : Controller
+namespace StajYonetimSistemi.Controllers
 {
-    private readonly StajDbContext database;
-    private readonly PasswordService passwordService;
-
-    public AccountController(StajDbContext database, PasswordService passwordService)
+    public class AccountController : Controller
     {
-        this.database = database;
-        this.passwordService = passwordService;
-    }
+        private StajDbContext database;
+        private PasswordService passwordService;
 
-    // Giriş formu için güvenlik doğrulama değeri oluşturma
-    [HttpGet]
-    public IActionResult Login([FromServices] IAntiforgery antiforgery)
-    {
-        AntiforgeryTokenSet tokens = antiforgery.GetAndStoreTokens(HttpContext);
-        return Json(new { requestToken = tokens.RequestToken });
-    }
-
-    // Kullanıcı adı veya e-posta ile giriş yapma
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public IActionResult Login([FromForm] string userName, [FromForm] string password)
-    {
-        // Boş bırakılan giriş bilgilerini kontrol etme
-        if (string.IsNullOrWhiteSpace(userName))
+        public AccountController(StajDbContext database, PasswordService passwordService)
         {
-            return BadRequest("Kullanıcı adı veya e-posta gerekli.");
+            this.database = database;
+            this.passwordService = passwordService;
         }
 
-        if (string.IsNullOrEmpty(password))
+        // Kullanıcı adı veya e-posta ile giriş yapma
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Login([FromForm] string userName, [FromForm] string password)
         {
-            return BadRequest("Şifre gerekli.");
+            // Boş bırakılan giriş bilgilerini kontrol etme
+            if (string.IsNullOrWhiteSpace(userName))
+            {
+                RecordFailedLogin("", null, "Kullanıcı adı/e-posta boş.");
+                return BadRequest("Kullanıcı adı veya e-posta gerekli.");
+            }
+
+            if (string.IsNullOrEmpty(password))
+            {
+                RecordFailedLogin(userName, null, "Şifre boş.");
+                return BadRequest("Şifre gerekli.");
+            }
+
+            // Kullanıcı adı veya e-postaya göre arama
+            var userQuery = from account in database.Users
+                            where account.UserName == userName || account.Email == userName
+                            select account;
+
+            List<User> matchingUsers = userQuery.ToList();
+
+            // Tek bir hesap bulunmadıysa girişi reddetme
+            if (matchingUsers.Count != 1)
+            {
+                RecordFailedLogin(userName, null, "Tek bir hesap eşleşmedi.");
+                return Unauthorized("Kullanıcı adı/e-posta veya şifre hatalı.");
+            }
+
+            User user = matchingUsers[0];
+
+            if (user.IsLocked == true)
+            {
+                RecordFailedLogin(userName, user.Id, "Hesap kilitli.");
+                return Unauthorized("Hesap kilitli.");
+            }
+
+            bool passwordIsCorrect = passwordService.VerifyPassword(user, password);
+
+            if (passwordIsCorrect == false)
+            {
+                // Hatalı giriş sayısını artırma
+                user.FailedLoginCount = user.FailedLoginCount + 1;
+
+                // Beş hatalı denemede hesabı kilitleme
+                if (user.FailedLoginCount >= 5)
+                {
+                    user.IsLocked = true;
+                }
+
+                RecordFailedLogin(userName, user.Id, "Şifre hatalı.");
+
+                if (user.IsLocked == true)
+                {
+                    return Unauthorized("Hesap kilitli.");
+                }
+
+                return Unauthorized("Kullanıcı adı/e-posta veya şifre hatalı.");
+            }
+
+            // Sayacı sıfırlama ve değişiklikleri kaydetme
+            user.FailedLoginCount = 0;
+            database.SaveChanges();
+
+            // Kullanıcı kimliğini ve rolünü oturuma kaydetme
+            HttpContext.Session.Clear();
+            HttpContext.Session.SetInt32("UserId", user.Id);
+            HttpContext.Session.SetString("Role", user.Role);
+
+            return Ok("Giriş başarılı.");
         }
 
-        // Kullanıcı adı veya e-postası eşleşen hesabı bulma
-        List<User> users = database.Users
-            .Where(account => account.UserName == userName || account.Email == userName)
-            .ToList();
-
-        // Tek bir hesap bulunmadıysa girişi reddetme
-        if (users.Count != 1)
+        // Oturumdaki kullanıcı bilgisini görüntüleme
+        [HttpGet]
+        [SessionAuthorize]
+        public IActionResult Current()
         {
-            return Unauthorized("Kullanıcı adı/e-posta veya şifre hatalı.");
+            // Oturum bilgilerini hazırlama
+            SessionInfo info = new SessionInfo();
+            info.UserId = Convert.ToInt32(HttpContext.Session.GetInt32("UserId"));
+
+            var role = HttpContext.Session.GetString("Role");
+
+            if (role != null)
+            {
+                info.Role = role;
+            }
+
+            return Json(info);
         }
 
-        User user = users[0];
-
-        if (user.IsLocked == true)
+        // Oturum bilgilerini temizleyerek çıkış yapma
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Logout()
         {
-            return Unauthorized("Hesap kilitli.");
+            HttpContext.Session.Clear();
+            Response.Cookies.Delete(".Staj.Session");
+
+            return Ok("Çıkış yapıldı.");
         }
 
-        bool passwordIsCorrect = passwordService.VerifyPassword(user, password);
-
-        if (passwordIsCorrect == false)
+        // Başarısız giriş denemesini kaydetme
+        // Hesap bulunamadığında userId değerini boş bırakma
+        private void RecordFailedLogin(string userName, Nullable<int> userId, string reason)
         {
-            return Unauthorized("Kullanıcı adı/e-posta veya şifre hatalı.");
+            LoginAttempt attempt = new LoginAttempt();
+            attempt.UserNameOrEmail = userName;
+            attempt.UserId = userId;
+            attempt.FailureReason = reason;
+
+            database.LoginAttempts.Add(attempt);
+            database.SaveChanges();
         }
-
-        // Şifre servisi hash değerini yenilediyse kaydetme
-        database.SaveChanges();
-
-        // Kullanıcı kimliğini ve rolünü oturuma kaydetme
-        HttpContext.Session.Clear();
-        HttpContext.Session.SetInt32("UserId", user.Id);
-        HttpContext.Session.SetString("Role", user.Role);
-
-        return Ok("Giriş başarılı.");
-    }
-
-    // Oturumdaki kullanıcı bilgisini görüntüleme
-    [HttpGet]
-    public IActionResult Current()
-    {
-        // Oturumda kullanıcı yoksa kimlik değerini 0 kabul etme
-        int userId = Convert.ToInt32(HttpContext.Session.GetInt32("UserId"));
-
-        if (userId == 0)
-        {
-            return Unauthorized("Giriş yapılmamış.");
-        }
-
-        return Json(new { userId = userId, role = HttpContext.Session.GetString("Role") });
-    }
-
-    // Oturum bilgilerini temizleyerek çıkış yapma
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public IActionResult Logout()
-    {
-        HttpContext.Session.Clear();
-        Response.Cookies.Delete(".Staj.Session");
-
-        return Ok("Çıkış yapıldı.");
     }
 }

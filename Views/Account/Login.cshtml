@@ -1,0 +1,34 @@
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Giriş Yap";
+}
+
+<section class="login-card">
+    <div class="login-header">
+        <p class="eyebrow">STAJ YÖNETİM SİSTEMİ</p>
+        <h1>Hoş geldiniz</h1>
+        <p class="description">Hesabınıza giriş yapmak için bilgilerinizi girin.</p>
+    </div>
+
+    <form id="loginForm" asp-controller="Account" asp-action="Login" method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="form-group">
+            <label for="userName">Kullanıcı adı veya e-posta</label>
+            <input id="userName" name="userName" type="text" autocomplete="username" required />
+        </div>
+
+        <div class="form-group">
+            <label for="password">Şifre</label>
+            <input id="password" name="password" type="password" autocomplete="current-password" required />
+        </div>
+
+        <p id="loginMessage" class="form-message" role="alert"></p>
+
+        <button class="primary-button" type="submit">Giriş Yap</button>
+    </form>
+</section>
+
+@section Scripts {
+    <script src="~/js/login.js"></script>
+}

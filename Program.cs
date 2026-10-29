@@ -51,6 +51,7 @@ builder.Services.AddDbContext<StajDbContext>(options =>
 WebApplication app = builder.Build();
 
 // Yönlendirme sonrası oturumu kullanıma açma
+app.UseStaticFiles();
 app.UseRouting();
 app.UseSession();
 

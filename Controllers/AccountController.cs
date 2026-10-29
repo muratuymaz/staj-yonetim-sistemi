@@ -17,6 +17,13 @@ namespace StajYonetimSistemi.Controllers
             this.passwordService = passwordService;
         }
 
+        // Giriş sayfasını görüntüleme
+        [HttpGet]
+        public IActionResult Login()
+        {
+            return View();
+        }
+
         // Kullanıcı adı veya e-posta ile giriş yapma
         [HttpPost]
         [ValidateAntiForgeryToken]

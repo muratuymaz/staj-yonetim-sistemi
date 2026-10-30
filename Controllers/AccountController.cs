@@ -24,6 +24,13 @@ namespace StajYonetimSistemi.Controllers
             return View();
         }
 
+        // Kayıt sayfasını görüntüleme; kayıt işlemi sonraki aşamada eklenecek
+        [HttpGet]
+        public IActionResult Register()
+        {
+            return View();
+        }
+
         // Kullanıcı adı veya e-posta ile giriş yapma
         [HttpPost]
         [ValidateAntiForgeryToken]

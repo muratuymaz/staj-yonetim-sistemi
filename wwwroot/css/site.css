@@ -99,3 +99,21 @@ input:focus {
     color: #b91c1c;
     font-size: 14px;
 }
+
+.register-link {
+    display: block;
+    margin-top: 20px;
+    color: #2563eb;
+    font-size: 14px;
+    text-align: center;
+    text-decoration: none;
+}
+
+.register-link:hover {
+    text-decoration: underline;
+}
+
+.register-card {
+    max-width: 480px;
+}
+

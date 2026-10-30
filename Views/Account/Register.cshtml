@@ -1,0 +1,44 @@
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Kayıt Ol";
+}
+
+<section class="login-card register-card">
+    <div class="login-header">
+        <p class="eyebrow">STAJ YÖNETİM SİSTEMİ</p>
+        <h1>Kayıt Ol</h1>
+        <p class="description">Öğrenci hesabı oluşturmak için bilgilerinizi girin.</p>
+    </div>
+
+    <form id="registerForm">
+        <div class="form-group">
+            <label for="userName">Kullanıcı adı</label>
+            <input id="userName" name="userName" type="text" autocomplete="username" />
+        </div>
+
+        <div class="form-group">
+            <label for="email">E-posta</label>
+            <input id="email" name="email" type="text" autocomplete="email" />
+        </div>
+
+        <div class="form-group">
+            <label for="password">Şifre</label>
+            <input id="password" name="password" type="password" autocomplete="new-password" />
+        </div>
+
+        <div class="form-group">
+            <label for="passwordConfirmation">Şifre tekrar</label>
+            <input id="passwordConfirmation" name="passwordConfirmation" type="password" autocomplete="new-password" />
+        </div>
+
+        <p id="registerMessage" class="form-message" role="status"></p>
+
+        <button class="primary-button" type="submit">Kayıt Ol</button>
+    </form>
+
+    <a class="register-link" href="/Account/Login">Giriş sayfasına dön</a>
+</section>
+
+@section Scripts {
+    <script src="~/js/register.js"></script>
+}

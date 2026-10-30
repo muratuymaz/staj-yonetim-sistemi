@@ -55,9 +55,15 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseSession();
 
+// Ana sayfada giriş ekranını açma
+app.MapControllerRoute(
+    name: "login",
+    pattern: "",
+    defaults: new { controller = "Account", action = "Login" });
+
 // İstekleri controller ve action adına göre yönlendirme
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Account}/{action=Login}/{id?}");
+    pattern: "{controller=Account}/{action=Index}/{id?}");
 
 app.Run();

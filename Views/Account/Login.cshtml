@@ -25,6 +25,11 @@
 
         <p id="loginMessage" class="form-message" role="alert"></p>
 
+        @if (ViewBag.LoginMessage != null)
+        {
+            <p class="form-message success-message">@ViewBag.LoginMessage</p>
+        }
+
         <button class="primary-button" type="submit">Giriş Yap</button>
     </form>
 

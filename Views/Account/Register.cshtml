@@ -10,7 +10,8 @@
         <p class="description">Öğrenci hesabı oluşturmak için bilgilerinizi girin.</p>
     </div>
 
-    <form id="registerForm">
+    <form id="registerForm" asp-controller="Account" asp-action="Register" method="post">
+        @Html.AntiForgeryToken()
         <div class="form-group">
             <label for="userName">Kullanıcı adı</label>
             <input id="userName" name="userName" type="text" autocomplete="username" />

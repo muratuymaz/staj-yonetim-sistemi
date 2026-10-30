@@ -117,3 +117,7 @@ input:focus {
     max-width: 480px;
 }
 
+.success-message {
+    color: #166534;
+}
+

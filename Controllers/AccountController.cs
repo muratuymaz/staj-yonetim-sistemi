@@ -19,8 +19,13 @@ namespace StajYonetimSistemi.Controllers
 
         // Giriş sayfasını görüntüleme
         [HttpGet]
-        public IActionResult Login()
+        public IActionResult Login([FromQuery] bool registered = false)
         {
+            if (registered)
+            {
+                ViewBag.LoginMessage = "Kayıt başarılı. Bilgilerinizle giriş yapabilirsiniz.";
+            }
+
             return View();
         }
 
@@ -29,6 +34,48 @@ namespace StajYonetimSistemi.Controllers
         public IActionResult Register()
         {
             return View();
+        }
+
+        // Yeni öğrenci hesabını Users tablosuna kaydetme
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Register(
+            [FromForm] string userName,
+            [FromForm] string email,
+            [FromForm] string password,
+            [FromForm] string passwordConfirmation)
+        {
+            if (string.IsNullOrWhiteSpace(userName) ||
+                string.IsNullOrWhiteSpace(email) ||
+                string.IsNullOrWhiteSpace(password) ||
+                string.IsNullOrWhiteSpace(passwordConfirmation))
+            {
+                return BadRequest("Tüm alanları doldurmanız gerekiyor.");
+            }
+
+            if (password != passwordConfirmation)
+            {
+                return BadRequest("Şifreler eşleşmiyor.");
+            }
+
+            bool userNameExists = database.Users.Any(user => user.UserName == userName);
+            bool emailExists = database.Users.Any(user => user.Email == email);
+
+            if (userNameExists || emailExists)
+            {
+                return Conflict("Kullanıcı adı veya e-posta zaten kayıtlı.");
+            }
+
+            User user = new User();
+            user.UserName = userName.Trim();
+            user.Email = email.Trim();
+            user.Role = "Student";
+            user.PasswordHash = passwordService.HashPassword(user, password);
+
+            database.Users.Add(user);
+            database.SaveChanges();
+
+            return Ok("Kayıt başarılı.");
         }
 
         // Kullanıcı adı veya e-posta ile giriş yapma

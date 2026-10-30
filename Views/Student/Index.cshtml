@@ -1,0 +1,36 @@
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Öğrenci Paneli";
+}
+
+<div class="dashboard-page">
+    <header class="dashboard-header">
+        <div>
+            <p class="eyebrow">STAJ YÖNETİM SİSTEMİ</p>
+            <h1>Öğrenci Paneli</h1>
+            <p class="description">Staj evraklarınızı buradan yönetebilirsiniz.</p>
+        </div>
+
+        <form id="logoutForm" asp-controller="Account" asp-action="Logout" method="post">
+            @Html.AntiForgeryToken()
+            <button class="secondary-button" type="submit">Çıkış Yap</button>
+        </form>
+    </header>
+
+    <section class="panel-card upload-card">
+        <div>
+            <h2>Ek-16 evrakı</h2>
+            <p class="description">Staj evrakınızı yüklemek için aşağıdaki butonu kullanın.</p>
+        </div>
+
+        <button id="uploadButton" class="primary-button upload-button" type="button">
+            Evrak Yükle
+        </button>
+        <p id="uploadMessage" class="form-message upload-message" role="status"></p>
+    </section>
+</div>
+
+@section Scripts {
+    <script src="~/js/logout.js"></script>
+    <script src="~/js/student.js"></script>
+}

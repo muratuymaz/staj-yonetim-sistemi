@@ -8,7 +8,7 @@ namespace StajYonetimSistemi.Controllers
     {
         public IActionResult Index()
         {
-            return Ok("Öğrenci erişimi başarılı.");
+            return View();
         }
     }
 }

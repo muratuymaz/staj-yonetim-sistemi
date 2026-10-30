@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using StajYonetimSistemi.Data;
 using StajYonetimSistemi.Filters;
@@ -29,7 +30,7 @@ namespace StajYonetimSistemi.Controllers
             return View();
         }
 
-        // Kayıt sayfasını görüntüleme; kayıt işlemi sonraki aşamada eklenecek
+        // Kayıt sayfasını görüntüleme
         [HttpGet]
         public IActionResult Register()
         {
@@ -53,6 +54,29 @@ namespace StajYonetimSistemi.Controllers
                 return BadRequest("Tüm alanları doldurmanız gerekiyor.");
             }
 
+            // Kullanıcı adı ve e-postanın kenar boşluklarını temizleme
+            userName = userName.Trim();
+            email = email.Trim();
+
+            // E-posta biçimini kontrol etme
+            EmailAddressAttribute emailValidator = new EmailAddressAttribute();
+            bool emailIsValid = emailValidator.IsValid(email);
+
+            // E-postanın içinde boşluk olmadığını kontrol etme
+            foreach (char character in email)
+            {
+                if (char.IsWhiteSpace(character))
+                {
+                    emailIsValid = false;
+                    break;
+                }
+            }
+
+            if (emailIsValid == false)
+            {
+                return BadRequest("Geçerli bir e-posta adresi girmeniz gerekiyor.");
+            }
+
             if (password != passwordConfirmation)
             {
                 return BadRequest("Şifreler eşleşmiyor.");
@@ -67,8 +91,8 @@ namespace StajYonetimSistemi.Controllers
             }
 
             User user = new User();
-            user.UserName = userName.Trim();
-            user.Email = email.Trim();
+            user.UserName = userName;
+            user.Email = email;
             user.Role = "Student";
             user.PasswordHash = passwordService.HashPassword(user, password);
 

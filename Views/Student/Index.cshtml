@@ -8,7 +8,7 @@
         <div>
             <p class="eyebrow">STAJ YÖNETİM SİSTEMİ</p>
             <h1>Öğrenci Paneli</h1>
-            <p class="description">Staj evraklarınızı buradan yönetebilirsiniz.</p>
+            <p class="description">Ek-16 staj evrakı için gerekli öğrenci bilgilerini ve başvuru ayrıntılarını doldurun.</p>
         </div>
 
         <form id="logoutForm" asp-controller="Account" asp-action="Logout" method="post">
@@ -17,20 +17,178 @@
         </form>
     </header>
 
+    <section class="panel-card profile-form-card">
+        <div class="panel-heading">
+            <div>
+                <p class="section-kicker">EK-16 BİLGİ FORMU</p>
+                <h2>Öğrenci bilgileri</h2>
+                <p class="description">Bu ekran şu an yalnızca arayüz taslağıdır. Bilgiler henüz veritabanına gönderilmez.</p>
+            </div>
+            <span class="draft-badge">Taslak</span>
+        </div>
+
+        <form id="studentProfileForm" novalidate>
+            <div class="form-section">
+                <h3>Kimlik ve öğrenci bilgileri</h3>
+
+                <div class="form-grid two-columns">
+                    <div class="form-group">
+                        <label for="fullName">Ad soyad <span class="required-mark">*</span></label>
+                        <input id="fullName" name="FullName" type="text" autocomplete="name" placeholder="Ad Soyad" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="studentNumber">Öğrenci numarası <span class="required-mark">*</span></label>
+                        <input id="studentNumber" name="StudentNumber" type="text" inputmode="numeric" placeholder="Örn. 202012345" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="nationality">Uyruk <span class="required-mark">*</span></label>
+                        <select id="nationality" name="Nationality" required>
+                            <option value="">Seçiniz</option>
+                            <option value="TC">T.C.</option>
+                            <option value="Foreign">Yabancı uyruklu</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="identityNumber">T.C. / yabancı kimlik no <span class="required-mark">*</span></label>
+                        <input id="identityNumber" name="IdentityNumber" type="text" inputmode="numeric" minlength="11" maxlength="11" placeholder="11 haneli kimlik numarası" required />
+                        <small class="field-hint">T.C. için ilk hane 0 olamaz; yabancı kimlik numarası 99 ile başlamalıdır.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="birthDate">Doğum tarihi <span class="required-mark">*</span></label>
+                        <input id="birthDate" name="BirthDate" type="date" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="department">Bölüm <span class="required-mark">*</span></label>
+                        <input id="department" name="Department" type="text" placeholder="Örn. Yazılım Mühendisliği" required />
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>İletişim ve adres</h3>
+
+                <div class="form-grid two-columns">
+                    <div class="form-group full-width">
+                        <label for="address">Açık adres <span class="required-mark">*</span></label>
+                        <textarea id="address" name="Address" rows="3" placeholder="Mahalle, cadde/sokak, bina no, daire no, ilçe/il" required></textarea>
+                        <small class="field-hint">Adres; mahalle, cadde/sokak, bina no, daire no, ilçe ve il bilgilerini içermelidir.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phoneNumber">Telefon <span class="required-mark">*</span></label>
+                        <input id="phoneNumber" name="PhoneNumber" type="tel" inputmode="tel" placeholder="+90 5xx xxx xx xx" pattern="\+90 [0-9]{3} [0-9]{3} [0-9]{2} [0-9]{2}" required />
+                        <small class="field-hint">Format: +90 xxx xxx xx xx</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">E-posta <span class="required-mark">*</span></label>
+                        <input id="email" name="Email" type="email" autocomplete="email" placeholder="ornek@alanadi.com" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fax">Faks <span class="optional-mark">(opsiyonel)</span></label>
+                        <input id="fax" name="Fax" type="tel" inputmode="tel" placeholder="Varsa faks numarası" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Staj ve sağlık bilgileri</h3>
+
+                <div class="form-grid two-columns">
+                    <div class="form-group">
+                        <label for="academicYear">Öğretim yılı / yarıyıl <span class="required-mark">*</span></label>
+                        <input id="academicYear" name="AcademicYear" type="text" placeholder="Örn. 2025-2026 Bahar" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="previousInternshipDays">Daha önce yapılan staj gün sayısı</label>
+                        <input id="previousInternshipDays" name="PreviousInternshipDays" type="number" min="0" step="1" placeholder="0" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="healthAidStatus">Sağlık yardımı / sigorta durumu <span class="required-mark">*</span></label>
+                        <select id="healthAidStatus" name="HealthAidStatus" required>
+                            <option value="">Seçiniz</option>
+                            <option value="0">Yararlanıyor</option>
+                            <option value="1">Yararlanmıyor</option>
+                            <option value="2">Belirtilmedi</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="internshipSemester">Teslim edilen yarıyıl <span class="required-mark">*</span></label>
+                        <select id="internshipSemester" name="InternshipSemester" required>
+                            <option value="">Seçiniz</option>
+                            <option value="fall">Güz</option>
+                            <option value="spring">Bahar</option>
+                            <option value="summer">Yaz</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="internshipStartDate">Staj başlangıç tarihi <span class="required-mark">*</span></label>
+                        <input id="internshipStartDate" name="InternshipStartDate" type="date" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="internshipEndDate">Staj bitiş tarihi <span class="required-mark">*</span></label>
+                        <input id="internshipEndDate" name="InternshipEndDate" type="date" required />
+                    </div>
+
+                    <fieldset class="form-group full-width weekday-group">
+                        <legend>Haftalık staj günleri <span class="required-mark">*</span></legend>
+                        <div class="weekday-options">
+                            <label><input type="checkbox" name="InternshipDays" value="monday" /> Pazartesi</label>
+                            <label><input type="checkbox" name="InternshipDays" value="tuesday" /> Salı</label>
+                            <label><input type="checkbox" name="InternshipDays" value="wednesday" /> Çarşamba</label>
+                            <label><input type="checkbox" name="InternshipDays" value="thursday" /> Perşembe</label>
+                            <label><input type="checkbox" name="InternshipDays" value="friday" /> Cuma</label>
+                        </div>
+                        <small class="field-hint">Resmi tatiller ve toplam gün hesabı sonraki aşamada kontrol edilecektir.</small>
+                    </fieldset>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Staj evrağı teslim bağlantısı</h3>
+
+                <div class="form-group">
+                    <label for="googleFormUrl">Staj evrağı teslim Google Form URL'si <span class="optional-mark">(opsiyonel)</span></label>
+                    <input id="googleFormUrl" name="GoogleFormUrl" type="url" placeholder="https://docs.google.com/forms/..." />
+                    <small class="field-hint">URL doğrulama ve otomatik form doldurma sonraki geliştirmede yapılacaktır.</small>
+                </div>
+            </div>
+
+            <p id="profileFormMessage" class="form-message" role="status"></p>
+
+            <div class="form-actions">
+                <button class="primary-button form-save-button" type="submit">Formu Kaydet</button>
+                <button class="secondary-button" type="reset">Temizle</button>
+            </div>
+        </form>
+    </section>
+
     <section class="panel-card upload-card">
         <div>
+            <p class="section-kicker">STAJ EVRAĞI</p>
             <h2>Ek-16 evrakı</h2>
-            <p class="description">Staj evrakınızı yüklemek için aşağıdaki butonu kullanın.</p>
+            <p class="description">Bilgilerinizi tamamladıktan sonra staj evrağınızı yükleyebilirsiniz.</p>
         </div>
 
         <form asp-controller="Student" asp-action="Upload"
-            method="post" enctype="multipart/form-data">
+              method="post" enctype="multipart/form-data">
             @Html.AntiForgeryToken()
 
             <input type="file" name="file"
-                accept=".doc,.docx,.pdf,.jpg,.jpeg,.png" required />
+                   accept=".doc,.docx,.pdf,.jpg,.jpeg,.png" required />
 
-            <button type="submit">Evrak Yükle</button>
+            <button class="upload-button" type="submit">Evrak Yükle</button>
         </form>
         @if (TempData["UploadMessage"] is string message)
         {
@@ -41,4 +199,5 @@
 
 @section Scripts {
     <script src="~/js/logout.js"></script>
+    <script src="~/js/student.js"></script>
 }

@@ -31,6 +31,90 @@ namespace StajYonetimSistemi.Controllers
             return View();
         }
 
+        // Giriş yapan öğrencinin bilgilerini getirme
+        [HttpGet]
+        public IActionResult Profile()
+        {
+            int userId = Convert.ToInt32(HttpContext.Session.GetInt32("UserId"));
+            var student = database.Students.SingleOrDefault(item => item.UserId == userId);
+
+            if (student == null)
+            {
+                return NotFound("Öğrenci bilgileri henüz kaydedilmedi.");
+            }
+
+            return Json(student);
+        }
+
+        // Öğrenci bilgilerini giriş yapan hesaba kaydetme
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Profile([FromForm] Student form)
+        {
+            if (ModelState.IsValid == false)
+            {
+                return BadRequest("Öğrenci bilgilerini kontrol edin.");
+            }
+
+            // Zorunlu bilgilerin boş olmadığını kontrol etme
+            if (string.IsNullOrWhiteSpace(form.FullName) ||
+                string.IsNullOrWhiteSpace(form.StudentNumber) ||
+                string.IsNullOrWhiteSpace(form.IdentityNumber) ||
+                string.IsNullOrWhiteSpace(form.Nationality) ||
+                string.IsNullOrWhiteSpace(form.Address) ||
+                string.IsNullOrWhiteSpace(form.PhoneNumber) ||
+                string.IsNullOrWhiteSpace(form.Department) ||
+                string.IsNullOrWhiteSpace(form.AcademicYear) ||
+                form.BirthDate == DateTime.MinValue)
+            {
+                return BadRequest("Öğrenci bilgilerini eksiksiz doldurun.");
+            }
+
+            form.StudentNumber = form.StudentNumber.Trim();
+            form.IdentityNumber = form.IdentityNumber.Trim();
+
+            // Hesap bilgisini formdan değil oturumdan alma
+            int userId = Convert.ToInt32(HttpContext.Session.GetInt32("UserId"));
+
+            // Başka öğrenciye ait numaraların kullanılmasını engelleme
+            bool informationExists = database.Students.Any(item =>
+                item.UserId != userId &&
+                (item.StudentNumber == form.StudentNumber ||
+                 item.IdentityNumber == form.IdentityNumber));
+
+            if (informationExists)
+            {
+                return Conflict("Öğrenci veya kimlik numarası zaten kayıtlı.");
+            }
+
+            var student = database.Students.SingleOrDefault(item => item.UserId == userId);
+
+            // İlk kayıtta öğrenciyi hesaba bağlama
+            if (student == null)
+            {
+                student = new Student();
+                student.UserId = userId;
+                database.Students.Add(student);
+            }
+
+            // Yalnızca formdaki öğrenci bilgilerini güncelleme
+            student.FullName = form.FullName.Trim();
+            student.StudentNumber = form.StudentNumber;
+            student.IdentityNumber = form.IdentityNumber;
+            student.Nationality = form.Nationality.Trim();
+            student.BirthDate = form.BirthDate;
+            student.Address = form.Address.Trim();
+            student.PhoneNumber = form.PhoneNumber.Trim();
+            student.Department = form.Department.Trim();
+            student.AcademicYear = form.AcademicYear.Trim();
+            student.PreviousInternshipDays = form.PreviousInternshipDays;
+            student.HealthAidStatus = form.HealthAidStatus;
+
+            database.SaveChanges();
+
+            return Ok("Öğrenci bilgileri kaydedildi.");
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Upload(IFormFile? file)

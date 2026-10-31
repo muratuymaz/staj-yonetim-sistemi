@@ -30,6 +30,11 @@ public class StajDbContext : DbContext
         EntityTypeBuilder<Student> studentTable = modelBuilder.Entity<Student>();
         EntityTypeBuilder<Document> documentTable = modelBuilder.Entity<Document>();
 
+        // Ortak hesap ve öğrenci bilgilerini ayrı tablolarda tutma
+        userTable.UseTptMappingStrategy();
+        userTable.ToTable("Users");
+        studentTable.ToTable("Students");
+
         // Kullanıcı bilgilerinin tekrarını engelleme
         userTable.Property(user => user.UserName).UseCollation("NOCASE");
         userTable.Property(user => user.Email).UseCollation("NOCASE");
@@ -40,19 +45,14 @@ public class StajDbContext : DbContext
         IndexBuilder emailIndex = userTable.HasIndex(user => user.Email);
         emailIndex.IsUnique();
 
-        // Öğrenci bilgilerinin tekrarını engelleme
+        // Profil doldurulduğunda öğrenci numaralarının tekrarını engelleme
         IndexBuilder studentNumberIndex = studentTable.HasIndex(student => student.StudentNumber);
         studentNumberIndex.IsUnique();
+        studentNumberIndex.HasFilter("\"StudentNumber\" <> ''");
 
         IndexBuilder identityNumberIndex = studentTable.HasIndex(student => student.IdentityNumber);
         identityNumberIndex.IsUnique();
-
-        // Kullanıcı ve öğrenciyi bağlama
-        studentTable
-            .HasOne<User>()
-            .WithOne()
-            .HasForeignKey<Student>(student => student.UserId)
-            .OnDelete(DeleteBehavior.Restrict);
+        identityNumberIndex.HasFilter("\"IdentityNumber\" <> ''");
 
         // Öğrenci ve evrakları bağlama
         documentTable

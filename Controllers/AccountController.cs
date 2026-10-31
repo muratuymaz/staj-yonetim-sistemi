@@ -37,7 +37,7 @@ namespace StajYonetimSistemi.Controllers
             return View();
         }
 
-        // Yeni öğrenci hesabını Users tablosuna kaydetme
+        // Yeni öğrenciyi ortak hesap bilgileriyle kaydetme
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Register(
@@ -90,13 +90,13 @@ namespace StajYonetimSistemi.Controllers
                 return Conflict("Kullanıcı adı veya e-posta zaten kayıtlı.");
             }
 
-            User user = new User();
-            user.UserName = userName;
-            user.Email = email;
-            user.Role = "Student";
-            user.PasswordHash = passwordService.HashPassword(user, password);
+            Student student = new Student();
+            student.UserName = userName;
+            student.Email = email;
+            student.Role = "Student";
+            student.PasswordHash = passwordService.HashPassword(student, password);
 
-            database.Users.Add(user);
+            database.Students.Add(student);
             database.SaveChanges();
 
             return Ok("Kayıt başarılı.");

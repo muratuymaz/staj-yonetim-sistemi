@@ -36,20 +36,34 @@ namespace StajYonetimSistemi.Controllers
         public IActionResult Profile()
         {
             int userId = Convert.ToInt32(HttpContext.Session.GetInt32("UserId"));
-            var student = database.Students.SingleOrDefault(item => item.UserId == userId);
+            var student = database.Students.Find(userId);
 
-            if (student == null)
+            if (student == null || string.IsNullOrWhiteSpace(student.StudentNumber))
             {
                 return NotFound("Öğrenci bilgileri henüz kaydedilmedi.");
             }
 
-            return Json(student);
+            // Hesap şifresi ve rolü yerine yalnızca profil bilgilerini gönderme
+            StudentProfileForm profile = new StudentProfileForm();
+            profile.StudentNumber = student.StudentNumber;
+            profile.FullName = student.FullName;
+            profile.IdentityNumber = student.IdentityNumber;
+            profile.Nationality = student.Nationality;
+            profile.BirthDate = student.BirthDate;
+            profile.Address = student.Address;
+            profile.PhoneNumber = student.PhoneNumber;
+            profile.Department = student.Department;
+            profile.AcademicYear = student.AcademicYear;
+            profile.PreviousInternshipDays = student.PreviousInternshipDays;
+            profile.HealthAidStatus = student.HealthAidStatus;
+
+            return Json(profile);
         }
 
         // Öğrenci bilgilerini giriş yapan hesaba kaydetme
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Profile([FromForm] Student form)
+        public IActionResult Profile([FromForm] StudentProfileForm form)
         {
             if (ModelState.IsValid == false)
             {
@@ -78,7 +92,7 @@ namespace StajYonetimSistemi.Controllers
 
             // Başka öğrenciye ait numaraların kullanılmasını engelleme
             bool informationExists = database.Students.Any(item =>
-                item.UserId != userId &&
+                item.Id != userId &&
                 (item.StudentNumber == form.StudentNumber ||
                  item.IdentityNumber == form.IdentityNumber));
 
@@ -87,14 +101,11 @@ namespace StajYonetimSistemi.Controllers
                 return Conflict("Öğrenci veya kimlik numarası zaten kayıtlı.");
             }
 
-            var student = database.Students.SingleOrDefault(item => item.UserId == userId);
+            var student = database.Students.Find(userId);
 
-            // İlk kayıtta öğrenciyi hesaba bağlama
             if (student == null)
             {
-                student = new Student();
-                student.UserId = userId;
-                database.Students.Add(student);
+                return NotFound("Öğrenci hesabı bulunamadı.");
             }
 
             // Yalnızca formdaki öğrenci bilgilerini güncelleme
@@ -140,11 +151,17 @@ namespace StajYonetimSistemi.Controllers
 
             int userId = HttpContext.Session.GetInt32("UserId") ?? 0;
             Student? student = await database.Students
-                .SingleOrDefaultAsync(item => item.UserId == userId);
+                .SingleOrDefaultAsync(item => item.Id == userId);
 
             if (student == null)
             {
                 TempData["UploadMessage"] = "Öğrenci kaydı bulunamadı.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (string.IsNullOrWhiteSpace(student.StudentNumber))
+            {
+                TempData["UploadMessage"] = "Önce öğrenci bilgilerinizi doldurun.";
                 return RedirectToAction(nameof(Index));
             }
 

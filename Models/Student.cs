@@ -1,9 +1,8 @@
 namespace StajYonetimSistemi.Models;
 
-public class Student
+// Ortak hesap bilgilerini User sınıfından alma
+public class Student : User
 {
-    private int id;
-    private int userId;
     private string studentNumber = "";
     private string fullName = "";
     private string identityNumber = "";
@@ -15,33 +14,6 @@ public class Student
     private string academicYear = "";
     private int previousInternshipDays;
     private int healthAidStatus;
-
-    public int Id
-    {
-        get
-        {
-            return id;
-        }
-
-        set
-        {
-            id = value;
-        }
-    }
-
-    // Öğrenciyi kullanıcı hesabına bağlama
-    public int UserId
-    {
-        get
-        {
-            return userId;
-        }
-
-        set
-        {
-            userId = value;
-        }
-    }
 
     // Öğrenci kimlik bilgilerini tutma
     public string StudentNumber

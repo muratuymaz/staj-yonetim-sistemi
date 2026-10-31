@@ -23,14 +23,22 @@
             <p class="description">Staj evrakınızı yüklemek için aşağıdaki butonu kullanın.</p>
         </div>
 
-        <button id="uploadButton" class="primary-button upload-button" type="button">
-            Evrak Yükle
-        </button>
-        <p id="uploadMessage" class="form-message upload-message" role="status"></p>
+        <form asp-controller="Student" asp-action="Upload"
+            method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+
+            <input type="file" name="file"
+                accept=".doc,.docx,.pdf,.jpg,.jpeg,.png" required />
+
+            <button type="submit">Evrak Yükle</button>
+        </form>
+        @if (TempData["UploadMessage"] is string message)
+        {
+            <p class="form-message upload-message" role="status">@message</p>
+        }
     </section>
 </div>
 
 @section Scripts {
     <script src="~/js/logout.js"></script>
-    <script src="~/js/student.js"></script>
 }

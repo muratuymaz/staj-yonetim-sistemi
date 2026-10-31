@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
@@ -74,11 +74,52 @@ namespace StajYonetimSistemi.Data.Migrations
                     b.ToTable("LoginAttempts");
                 });
 
-            modelBuilder.Entity("StajYonetimSistemi.Models.Student", b =>
+            modelBuilder.Entity("StajYonetimSistemi.Models.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .UseCollation("NOCASE");
+
+                    b.Property<int>("FailedLoginCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsLocked")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .UseCollation("NOCASE");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.HasIndex("UserName")
+                        .IsUnique();
+
+                    b.ToTable("Users", (string)null);
+
+                    b.UseTptMappingStrategy();
+                });
+
+            modelBuilder.Entity("StajYonetimSistemi.Models.Student", b =>
+                {
+                    b.HasBaseType("StajYonetimSistemi.Models.User");
 
                     b.Property<string>("AcademicYear")
                         .IsRequired()
@@ -121,62 +162,15 @@ namespace StajYonetimSistemi.Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
                     b.HasIndex("IdentityNumber")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("\"IdentityNumber\" <> ''");
 
                     b.HasIndex("StudentNumber")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("\"StudentNumber\" <> ''");
 
-                    b.HasIndex("UserId")
-                        .IsUnique();
-
-                    b.ToTable("Students");
-                });
-
-            modelBuilder.Entity("StajYonetimSistemi.Models.User", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("TEXT")
-                        .UseCollation("NOCASE");
-
-                    b.Property<int>("FailedLoginCount")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsLocked")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("UserName")
-                        .IsRequired()
-                        .HasColumnType("TEXT")
-                        .UseCollation("NOCASE");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Email")
-                        .IsUnique();
-
-                    b.HasIndex("UserName")
-                        .IsUnique();
-
-                    b.ToTable("Users");
+                    b.ToTable("Students", (string)null);
                 });
 
             modelBuilder.Entity("StajYonetimSistemi.Models.Document", b =>
@@ -200,8 +194,8 @@ namespace StajYonetimSistemi.Data.Migrations
                 {
                     b.HasOne("StajYonetimSistemi.Models.User", null)
                         .WithOne()
-                        .HasForeignKey("StajYonetimSistemi.Models.Student", "UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasForeignKey("StajYonetimSistemi.Models.Student", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 #pragma warning restore 612, 618

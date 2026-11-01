@@ -20,11 +20,19 @@ namespace StajYonetimSistemi.Controllers
 
         // Giriş sayfasını görüntüleme
         [HttpGet]
-        public IActionResult Login([FromQuery] bool registered = false)
+        public IActionResult Login(
+            [FromQuery] bool registered = false,
+            [FromQuery] bool unauthorized = false)
         {
             if (registered)
             {
                 ViewBag.LoginMessage = "Kayıt başarılı. Bilgilerinizle giriş yapabilirsiniz.";
+            }
+
+            if (unauthorized)
+            {
+                ViewBag.UnauthorizedMessage =
+                    "Yetkisiz işlem: Bu sayfaya erişmek için giriş yapmanız veya uygun role sahip olmanız gerekiyor.";
             }
 
             return View();

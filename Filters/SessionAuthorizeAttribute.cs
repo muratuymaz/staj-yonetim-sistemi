@@ -22,7 +22,7 @@ namespace StajYonetimSistemi.Filters
             // Giriş yapılmamışsa erişimi engelleme
             if (userId == 0)
             {
-                context.Result = new UnauthorizedResult();
+                RedirectToLogin(context);
                 return;
             }
 
@@ -35,7 +35,7 @@ namespace StajYonetimSistemi.Filters
             if (user == null)
             {
                 session.Clear();
-                context.Result = new UnauthorizedResult();
+                RedirectToLogin(context);
                 return;
             }
 
@@ -43,7 +43,7 @@ namespace StajYonetimSistemi.Filters
             if (user.IsLocked == true)
             {
                 session.Clear();
-                context.Result = new UnauthorizedResult();
+                RedirectToLogin(context);
                 return;
             }
 
@@ -53,7 +53,7 @@ namespace StajYonetimSistemi.Filters
             if (role != user.Role)
             {
                 session.Clear();
-                context.Result = new UnauthorizedResult();
+                RedirectToLogin(context);
                 return;
             }
 
@@ -65,8 +65,16 @@ namespace StajYonetimSistemi.Filters
 
             if (user.Role != requiredRole)
             {
-                context.Result = new StatusCodeResult(403);
+                RedirectToLogin(context);
             }
+        }
+
+        private static void RedirectToLogin(AuthorizationFilterContext context)
+        {
+            context.Result = new RedirectToActionResult(
+                "Login",
+                "Account",
+                routeValues: new { unauthorized = true });
         }
     }
 }

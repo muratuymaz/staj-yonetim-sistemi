@@ -30,6 +30,11 @@
             <p class="form-message success-message">@ViewBag.LoginMessage</p>
         }
 
+        @if (ViewBag.UnauthorizedMessage != null)
+        {
+            <p class="form-message unauthorized-message">@ViewBag.UnauthorizedMessage</p>
+        }
+
         <button class="primary-button" type="submit">Giriş Yap</button>
     </form>
 

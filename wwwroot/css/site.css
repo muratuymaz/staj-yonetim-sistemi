@@ -121,6 +121,11 @@ input:focus {
     color: #166534;
 }
 
+.unauthorized-message {
+    color: #b91c1c;
+    font-weight: 700;
+}
+
 .dashboard-page {
     width: 100%;
     max-width: 980px;

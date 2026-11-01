@@ -22,12 +22,17 @@
             <div>
                 <p class="section-kicker">EK-16 BİLGİ FORMU</p>
                 <h2>Öğrenci bilgileri</h2>
-                <p class="description">Bu ekran şu an yalnızca arayüz taslağıdır. Bilgiler henüz veritabanına gönderilmez.</p>
+                <p class="description">Bilgileriniz oturum açtığınız öğrenci hesabına bağlı olarak veritabanına kaydedilir.</p>
             </div>
-            <span class="draft-badge">Taslak</span>
+            <span class="draft-badge">Kayıt aktif</span>
         </div>
 
-        <form id="studentProfileForm" novalidate>
+        <form id="studentProfileForm"
+              asp-controller="Student"
+              asp-action="Profile"
+              method="post"
+              novalidate>
+            @Html.AntiForgeryToken()
             <div class="form-section">
                 <h3>Kimlik ve öğrenci bilgileri</h3>
 
@@ -199,5 +204,5 @@
 
 @section Scripts {
     <script src="~/js/logout.js"></script>
-    <script src="~/js/student.js"></script>
+    <script src="~/js/student.js?v=3"></script>
 }

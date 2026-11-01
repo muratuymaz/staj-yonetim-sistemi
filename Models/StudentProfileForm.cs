@@ -2,6 +2,7 @@ namespace StajYonetimSistemi.Models;
 
 public class StudentProfileForm
 {
+    private string email = "";
     private string studentNumber = "";
     private string fullName = "";
     private string identityNumber = "";
@@ -15,6 +16,19 @@ public class StudentProfileForm
     private int healthAidStatus;
 
     // Öğrenci kimlik bilgilerini tutma
+    public string Email
+    {
+        get
+        {
+            return email;
+        }
+
+        set
+        {
+            email = value;
+        }
+    }
+
     public string StudentNumber
     {
         get

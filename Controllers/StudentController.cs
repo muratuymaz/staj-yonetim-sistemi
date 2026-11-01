@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using StajYonetimSistemi.Data;
 using StajYonetimSistemi.Filters;
 using StajYonetimSistemi.Models;
@@ -48,6 +49,7 @@ namespace StajYonetimSistemi.Controllers
 
             // Hesap şifresi ve rolü yerine yalnızca profil bilgilerini gönderme
             StudentProfileForm profile = new StudentProfileForm();
+            profile.Email = student.Email;
             profile.StudentNumber = student.StudentNumber;
             profile.FullName = student.FullName;
             profile.IdentityNumber = student.IdentityNumber;
@@ -75,6 +77,7 @@ namespace StajYonetimSistemi.Controllers
 
             // Zorunlu bilgilerin boş olmadığını kontrol etme
             if (string.IsNullOrWhiteSpace(form.FullName) ||
+                string.IsNullOrWhiteSpace(form.Email) ||
                 string.IsNullOrWhiteSpace(form.StudentNumber) ||
                 string.IsNullOrWhiteSpace(form.IdentityNumber) ||
                 string.IsNullOrWhiteSpace(form.Nationality) ||
@@ -87,8 +90,15 @@ namespace StajYonetimSistemi.Controllers
                 return BadRequest("Öğrenci bilgilerini eksiksiz doldurun.");
             }
 
+            form.Email = form.Email.Trim();
             form.StudentNumber = form.StudentNumber.Trim();
             form.IdentityNumber = form.IdentityNumber.Trim();
+
+            EmailAddressAttribute emailValidator = new EmailAddressAttribute();
+            if (emailValidator.IsValid(form.Email) == false)
+            {
+                return BadRequest("Geçerli bir e-posta adresi girin.");
+            }
 
             // Hesap bilgisini formdan değil oturumdan alma
             int userId = Convert.ToInt32(HttpContext.Session.GetInt32("UserId"));
@@ -104,6 +114,14 @@ namespace StajYonetimSistemi.Controllers
                 return Conflict("Öğrenci veya kimlik numarası zaten kayıtlı.");
             }
 
+            bool emailExists = database.Users.Any(user =>
+                user.Id != userId && user.Email == form.Email);
+
+            if (emailExists)
+            {
+                return Conflict("Bu e-posta adresi başka bir kullanıcıya ait.");
+            }
+
             var student = database.Students.Find(userId);
 
             if (student == null)
@@ -112,6 +130,7 @@ namespace StajYonetimSistemi.Controllers
             }
 
             // Yalnızca formdaki öğrenci bilgilerini güncelleme
+            student.Email = form.Email;
             student.FullName = form.FullName.Trim();
             student.StudentNumber = form.StudentNumber;
             student.IdentityNumber = form.IdentityNumber;

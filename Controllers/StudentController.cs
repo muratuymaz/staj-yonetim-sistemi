@@ -13,14 +13,20 @@ namespace StajYonetimSistemi.Controllers
         private readonly StajDbContext database;
         private readonly IWebHostEnvironment environment;
         private readonly DocumentFileValidator fileValidator;
+        private readonly ILogger<StudentController> logger;
 
         private const long MaxFileSize = 10 * 1024 * 1024;
 
-        public StudentController(StajDbContext database, IWebHostEnvironment environment, DocumentFileValidator fileValidator)
+        public StudentController(
+            StajDbContext database,
+            IWebHostEnvironment environment,
+            DocumentFileValidator fileValidator,
+            ILogger<StudentController> logger)
         {
             this.database = database;
             this.environment = environment;
             this.fileValidator = fileValidator;
+            this.logger = logger;
         }
 
         public IActionResult Index()
@@ -125,9 +131,11 @@ namespace StajYonetimSistemi.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Upload(IFormFile? file, CancellationToken cancellationToken)
+        public async Task<IActionResult> Upload(
+            IFormFile? file,
+            CancellationToken cancellationToken)
         {
-            if (file == null || file.Length == 0)
+            if (file is null || file.Length == 0)
             {
                 TempData["UploadMessage"] = "Lütfen bir dosya seçin.";
                 return RedirectToAction(nameof(Index));
@@ -139,18 +147,21 @@ namespace StajYonetimSistemi.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            string? validationError = await fileValidator.ValidateAsync(file, cancellationToken);
+            // İçerik doğrulaması başarısızsa dosyayı kaydetme veya Document oluşturmuyoruz.
+            string? validationError =
+                await fileValidator.ValidateAsync(file, cancellationToken);
             if (validationError is not null)
             {
                 TempData["UploadMessage"] = validationError;
                 return RedirectToAction(nameof(Index));
             }
 
+            // TPT kalıtımında oturumdaki UserId, Student.Id ile aynıdır.
             int userId = HttpContext.Session.GetInt32("UserId") ?? 0;
             Student? student = await database.Students
                 .SingleOrDefaultAsync(item => item.Id == userId, cancellationToken);
 
-            if (student == null)
+            if (student is null)
             {
                 TempData["UploadMessage"] = "Öğrenci kaydı bulunamadı.";
                 return RedirectToAction(nameof(Index));
@@ -162,45 +173,90 @@ namespace StajYonetimSistemi.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            // Kullanıcının dosya adını fiziksel yolda kullanmıyor, GUID ile çakışmayı önlüyoruz.
             string extension = Path.GetExtension(file.FileName).ToLowerInvariant();
             string storedFileName = $"{Guid.NewGuid():N}{extension}";
-            string uploadDirectory = Path.Combine(environment.ContentRootPath, "UploadedFiles");
-            string fullPath = Path.Combine(uploadDirectory, storedFileName);
+            string documentsDirectory = Path.Combine(
+                environment.ContentRootPath, "Uploads", "Documents");
+            string temporaryPath = Path.Combine(
+                documentsDirectory, $".{Guid.NewGuid():N}.uploading");
+            string finalPath = Path.Combine(documentsDirectory, storedFileName);
+
+            // Veritabanında Windows/Mac'e özgü mutlak yol yerine taşınabilir göreli yol tutuyoruz.
+            string relativePath = $"Uploads/Documents/{storedFileName}";
+            Document? document = null;
 
             try
             {
-                Directory.CreateDirectory(uploadDirectory);
+                Directory.CreateDirectory(documentsDirectory);
 
-                await using (FileStream stream = new(fullPath, FileMode.CreateNew))
+                // Önce geçici dosyaya tam yaz; yarım yükleme nihai dosya adıyla görünmesin.
+                await using (FileStream output = new(
+                    temporaryPath,
+                    FileMode.CreateNew,
+                    FileAccess.Write,
+                    FileShare.None))
                 {
-                    await file.CopyToAsync(stream, cancellationToken);
+                    await file.CopyToAsync(output, cancellationToken);
                 }
 
-                Document document = new()
+                // Dosya tamamlandıktan sonra aynı klasörde nihai GUID adına taşı.
+                System.IO.File.Move(temporaryPath, finalPath);
+
+                document = new Document
                 {
                     StudentId = student.Id,
                     OriginalFileName = Path.GetFileName(file.FileName),
-                    FilePath = Path.Combine("UploadedFiles", storedFileName),
+                    FilePath = relativePath,
                     UploadedAt = DateTime.UtcNow,
                     Status = "Uploaded"
                 };
 
                 database.Documents.Add(document);
+
+                // Belge satırı başarısız kaydedilirse aşağıdaki telafi adımı dosyayı temizler.
                 await database.SaveChangesAsync(cancellationToken);
 
-                TempData["UploadMessage"] = "Evrak başarıyla yüklendi.";
+                TempData["UploadMessage"] = "Ek-16 dosyası başarıyla yüklendi.";
             }
-            catch
+            catch (OperationCanceledException)
             {
-                if (System.IO.File.Exists(fullPath))
+                TryDeleteUploadFile(temporaryPath);
+                TryDeleteUploadFile(finalPath);
+                throw;
+            }
+            catch (Exception exception)
+            {
+                if (document is not null &&
+                    database.Entry(document).State != EntityState.Detached)
                 {
-                    System.IO.File.Delete(fullPath);
+                    database.Entry(document).State = EntityState.Detached;
                 }
 
-                TempData["UploadMessage"] = "Dosya yüklenirken bir hata oluştu.";
+                // Disk yazımı veya DB kaydı başarısızsa yarım kalan dosyaları temizle.
+                TryDeleteUploadFile(temporaryPath);
+                TryDeleteUploadFile(finalPath);
+                logger.LogError(exception, "Ek-16 yükleme veya belge kaydı başarısız oldu.");
+
+                TempData["UploadMessage"] =
+                    "Dosya yüklenemedi veya belge kaydı oluşturulamadı. Lütfen tekrar deneyin.";
             }
 
             return RedirectToAction(nameof(Index));
+        }
+
+        private void TryDeleteUploadFile(string path)
+        {
+            try
+            {
+                if (System.IO.File.Exists(path))
+                    System.IO.File.Delete(path);
+            }
+            catch (Exception exception)
+            {
+                // Temizlik hatası da loglanır; dosya yolu/istisna kullanıcıya gösterilmez.
+                logger.LogError(exception, "Yükleme artığı silinemedi: {Path}", path);
+            }
         }
     }
 }

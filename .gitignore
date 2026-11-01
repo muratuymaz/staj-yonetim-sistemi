@@ -14,6 +14,10 @@ Database/*.db-journal
 Database/*.db-wal
 Database/*.db-shm
 
+# Öğrenci yüklemeleri sürüm kontrolüne eklenmez; yalnızca klasör işaretçisi izlenir.
+Uploads/Documents/*
+!Uploads/Documents/.gitkeep
+
 # macOS sistem dosyaları
 .DS_Store
 

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using StajYonetimSistemi.Data;
 using StajYonetimSistemi.Filters;
 using StajYonetimSistemi.Models;
+using StajYonetimSistemi.Services;
 
 namespace StajYonetimSistemi.Controllers
 {
@@ -11,19 +12,15 @@ namespace StajYonetimSistemi.Controllers
     {
         private readonly StajDbContext database;
         private readonly IWebHostEnvironment environment;
+        private readonly DocumentFileValidator fileValidator;
 
         private const long MaxFileSize = 10 * 1024 * 1024;
 
-        private static readonly HashSet<string> AllowedExtensions =
-            new(StringComparer.OrdinalIgnoreCase)
-            {
-                ".pdf", ".doc", ".docx", ".jpg", ".jpeg", ".png"
-            };
-
-        public StudentController(StajDbContext database, IWebHostEnvironment environment)
+        public StudentController(StajDbContext database, IWebHostEnvironment environment, DocumentFileValidator fileValidator)
         {
             this.database = database;
             this.environment = environment;
+            this.fileValidator = fileValidator;
         }
 
         public IActionResult Index()
@@ -128,7 +125,7 @@ namespace StajYonetimSistemi.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Upload(IFormFile? file)
+        public async Task<IActionResult> Upload(IFormFile? file, CancellationToken cancellationToken)
         {
             if (file == null || file.Length == 0)
             {
@@ -142,16 +139,16 @@ namespace StajYonetimSistemi.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            string extension = Path.GetExtension(file.FileName);
-            if (!AllowedExtensions.Contains(extension))
+            string? validationError = await fileValidator.ValidateAsync(file, cancellationToken);
+            if (validationError is not null)
             {
-                TempData["UploadMessage"] = "Bu dosya türüne izin verilmiyor.";
+                TempData["UploadMessage"] = validationError;
                 return RedirectToAction(nameof(Index));
             }
 
             int userId = HttpContext.Session.GetInt32("UserId") ?? 0;
             Student? student = await database.Students
-                .SingleOrDefaultAsync(item => item.Id == userId);
+                .SingleOrDefaultAsync(item => item.Id == userId, cancellationToken);
 
             if (student == null)
             {
@@ -165,7 +162,8 @@ namespace StajYonetimSistemi.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            string storedFileName = $"{Guid.NewGuid():N}{extension.ToLowerInvariant()}";
+            string extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            string storedFileName = $"{Guid.NewGuid():N}{extension}";
             string uploadDirectory = Path.Combine(environment.ContentRootPath, "UploadedFiles");
             string fullPath = Path.Combine(uploadDirectory, storedFileName);
 
@@ -175,7 +173,7 @@ namespace StajYonetimSistemi.Controllers
 
                 await using (FileStream stream = new(fullPath, FileMode.CreateNew))
                 {
-                    await file.CopyToAsync(stream);
+                    await file.CopyToAsync(stream, cancellationToken);
                 }
 
                 Document document = new()
@@ -188,7 +186,7 @@ namespace StajYonetimSistemi.Controllers
                 };
 
                 database.Documents.Add(document);
-                await database.SaveChangesAsync();
+                await database.SaveChangesAsync(cancellationToken);
 
                 TempData["UploadMessage"] = "Evrak başarıyla yüklendi.";
             }

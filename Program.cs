@@ -29,6 +29,7 @@ builder.Services.AddControllersWithViews();
 
 // Şifre işlemlerini kullanıma hazırlama
 builder.Services.AddScoped<PasswordService>();
+builder.Services.AddScoped<DocumentFileValidator>();
 
 // Oturum bilgilerini sunucu belleğinde tutma
 builder.Services.AddDistributedMemoryCache();

@@ -1,0 +1,103 @@
+@model List<StajYonetimSistemi.Models.AdminStudentViewModel>
+
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Admin Paneli";
+}
+
+<div class="admin-page">
+    <header class="admin-header">
+        <div>
+            <p class="eyebrow">STAJ YÖNETİM SİSTEMİ</p>
+            <h1>Admin Paneli</h1>
+            <p class="description">Test veri setini ve kayıtlı öğrencileri görüntüleyin.</p>
+        </div>
+
+        <form id="logoutForm" asp-controller="Account" asp-action="Logout" method="post">
+            @Html.AntiForgeryToken()
+            <button class="secondary-button" type="submit">Çıkış Yap</button>
+        </form>
+    </header>
+
+    <section class="admin-card">
+        <div class="admin-card-heading">
+            <div>
+                <p class="section-kicker">VİZE KAPSAMI</p>
+                <h2>Test veri seti</h2>
+                <p class="description">CSV dosyasını seçerek ilk kayıtları tarayıcı üzerinde önizleyin.</p>
+            </div>
+            <span class="draft-badge">Önizleme</span>
+        </div>
+
+        <div class="dataset-upload-area">
+            <label class="file-dropzone" for="datasetFile">
+                <span class="file-dropzone-icon">↑</span>
+                <span class="file-dropzone-title">CSV dosyası seçin</span>
+                <span class="file-dropzone-note">Öğrenci bilgilerini içeren .csv dosyası</span>
+                <input id="datasetFile" type="file" accept=".csv,text/csv" />
+            </label>
+
+            <div class="dataset-file-info">
+                <p id="datasetFileName" class="dataset-file-name">Henüz dosya seçilmedi.</p>
+                <p id="datasetMessage" class="form-message" role="status"></p>
+                <button id="datasetPreviewButton" class="primary-button dataset-button" type="button" disabled>Önizlemeyi Göster</button>
+            </div>
+        </div>
+
+        <div id="datasetPreview" class="dataset-preview" hidden>
+            <div class="preview-heading">
+                <h3>CSV önizlemesi</h3>
+                <span id="datasetRowCount" class="preview-count"></span>
+            </div>
+            <div class="table-wrapper">
+                <table id="datasetPreviewTable" class="admin-table"></table>
+            </div>
+        </div>
+    </section>
+
+    <section class="admin-card">
+        <div class="admin-card-heading">
+            <div>
+                <p class="section-kicker">ÖĞRENCİ KAYITLARI</p>
+                <h2>Öğrenciler</h2>
+                <p class="description">Kayıtlar veritabanından okunmaktadır.</p>
+            </div>
+            <span class="student-count-badge">@Model.Count öğrenci</span>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="admin-table student-table">
+                <thead>
+                    <tr>
+                        <th>Ad soyad</th>
+                        <th>Öğrenci no</th>
+                        <th>Uyruk</th>
+                        <th>Bölüm</th>
+                        <th>E-posta</th>
+                        <th>Telefon</th>
+                        <th>Evrak durumu</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var student in Model)
+                    {
+                        <tr>
+                            <td><strong>@student.FullName</strong><small>@student.UserName</small></td>
+                            <td>@(string.IsNullOrWhiteSpace(student.StudentNumber) ? "-" : student.StudentNumber)</td>
+                            <td>@(string.IsNullOrWhiteSpace(student.Nationality) ? "-" : student.Nationality)</td>
+                            <td>@(string.IsNullOrWhiteSpace(student.Department) ? "-" : student.Department)</td>
+                            <td>@student.Email</td>
+                            <td>@(string.IsNullOrWhiteSpace(student.PhoneNumber) ? "-" : student.PhoneNumber)</td>
+                            <td><span class="status-pill status-@student.DocumentStatusKey">@student.DocumentStatus</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <script src="~/js/logout.js"></script>
+    <script src="~/js/admin.js?v=1"></script>
+}

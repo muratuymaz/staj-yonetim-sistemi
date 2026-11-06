@@ -91,13 +91,34 @@ namespace StajYonetimSistemi.Controllers
             }
 
             form.Email = form.Email.Trim();
+            form.FullName = form.FullName.Trim();
             form.StudentNumber = form.StudentNumber.Trim();
             form.IdentityNumber = form.IdentityNumber.Trim();
+            form.Nationality = form.Nationality.Trim();
+            form.Address = form.Address.Trim();
+            form.PhoneNumber = form.PhoneNumber.Trim();
+            form.Department = form.Department.Trim();
+            form.AcademicYear = form.AcademicYear.Trim();
 
             EmailAddressAttribute emailValidator = new EmailAddressAttribute();
             if (emailValidator.IsValid(form.Email) == false)
             {
                 return BadRequest("Geçerli bir e-posta adresi girin.");
+            }
+
+            if (form.BirthDate > DateTime.Today)
+            {
+                return BadRequest("Doğum tarihi gelecekte olamaz.");
+            }
+
+            if (form.PreviousInternshipDays < 0)
+            {
+                return BadRequest("Önceki staj gün sayısı negatif olamaz.");
+            }
+
+            if (form.HealthAidStatus < 0 || form.HealthAidStatus > 2)
+            {
+                return BadRequest("Sağlık yardımı statüsü geçersiz.");
             }
 
             // Hesap bilgisini formdan değil oturumdan alma
@@ -131,15 +152,15 @@ namespace StajYonetimSistemi.Controllers
 
             // Yalnızca formdaki öğrenci bilgilerini güncelleme
             student.Email = form.Email;
-            student.FullName = form.FullName.Trim();
+            student.FullName = form.FullName;
             student.StudentNumber = form.StudentNumber;
             student.IdentityNumber = form.IdentityNumber;
-            student.Nationality = form.Nationality.Trim();
+            student.Nationality = form.Nationality;
             student.BirthDate = form.BirthDate;
-            student.Address = form.Address.Trim();
-            student.PhoneNumber = form.PhoneNumber.Trim();
-            student.Department = form.Department.Trim();
-            student.AcademicYear = form.AcademicYear.Trim();
+            student.Address = form.Address;
+            student.PhoneNumber = form.PhoneNumber;
+            student.Department = form.Department;
+            student.AcademicYear = form.AcademicYear;
             student.PreviousInternshipDays = form.PreviousInternshipDays;
             student.HealthAidStatus = form.HealthAidStatus;
 

@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace StajYonetimSistemi.Models;
 
 public class StudentProfileForm
@@ -16,6 +18,8 @@ public class StudentProfileForm
     private int healthAidStatus;
 
     // Öğrenci kimlik bilgilerini tutma
+    [Required]
+    [EmailAddress]
     public string Email
     {
         get
@@ -29,6 +33,7 @@ public class StudentProfileForm
         }
     }
 
+    [Required]
     public string StudentNumber
     {
         get
@@ -42,6 +47,7 @@ public class StudentProfileForm
         }
     }
 
+    [Required]
     public string FullName
     {
         get
@@ -55,6 +61,8 @@ public class StudentProfileForm
         }
     }
 
+    [Required]
+    [StringLength(11, MinimumLength = 11)]
     public string IdentityNumber
     {
         get
@@ -68,6 +76,7 @@ public class StudentProfileForm
         }
     }
 
+    [Required]
     public string Nationality
     {
         get
@@ -95,6 +104,7 @@ public class StudentProfileForm
     }
 
     // İletişim bilgilerini tutma
+    [Required]
     public string Address
     {
         get
@@ -108,6 +118,7 @@ public class StudentProfileForm
         }
     }
 
+    [Required]
     public string PhoneNumber
     {
         get
@@ -122,6 +133,7 @@ public class StudentProfileForm
     }
 
     // Bölüm ve staj bilgilerini tutma
+    [Required]
     public string Department
     {
         get
@@ -135,6 +147,7 @@ public class StudentProfileForm
         }
     }
 
+    [Required]
     public string AcademicYear
     {
         get
@@ -148,6 +161,7 @@ public class StudentProfileForm
         }
     }
 
+    [Range(0, int.MaxValue)]
     public int PreviousInternshipDays
     {
         get
@@ -162,6 +176,7 @@ public class StudentProfileForm
     }
 
     // Sağlık yardımı seçimini tutma
+    [Range(0, 2)]
     public int HealthAidStatus
     {
         get

@@ -2,6 +2,7 @@ const datasetFile = document.getElementById("datasetFile");
 const datasetFileName = document.getElementById("datasetFileName");
 const datasetMessage = document.getElementById("datasetMessage");
 const datasetPreviewButton = document.getElementById("datasetPreviewButton");
+const datasetImportButton = document.getElementById("datasetImportButton");
 const datasetPreview = document.getElementById("datasetPreview");
 const datasetPreviewTable = document.getElementById("datasetPreviewTable");
 const datasetRowCount = document.getElementById("datasetRowCount");
@@ -63,7 +64,7 @@ function renderCsvPreview() {
     datasetPreviewTable.innerHTML = `<thead><tr>${headerHtml}</tr></thead><tbody>${rowHtml}</tbody>`;
     datasetRowCount.textContent = `${lines.length - 1} kayıt bulundu, ilk ${rows.length} kayıt gösteriliyor.`;
     datasetPreview.hidden = false;
-    datasetMessage.textContent = "Önizleme hazırlandı. Veritabanına kayıt yapılmadı.";
+    datasetMessage.textContent = "Önizleme hazırlandı. Aktarmak için Veritabanına Aktar butonuna basın.";
     datasetMessage.classList.add("success-message");
 }
 
@@ -73,6 +74,15 @@ datasetFile?.addEventListener("change", function () {
     if (!file || !file.name.toLowerCase().endsWith(".csv")) {
         datasetFileName.textContent = "Geçerli bir CSV dosyası seçilmedi.";
         datasetPreviewButton.disabled = true;
+        datasetImportButton.disabled = true;
+        csvText = "";
+        return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+        datasetFileName.textContent = "CSV dosyası 10 MB'dan büyük olamaz.";
+        datasetPreviewButton.disabled = true;
+        datasetImportButton.disabled = true;
         csvText = "";
         return;
     }
@@ -81,6 +91,7 @@ datasetFile?.addEventListener("change", function () {
     datasetMessage.textContent = "Dosya seçildi. Önizlemeyi göstermek için butona basın.";
     datasetMessage.classList.remove("success-message");
     datasetPreviewButton.disabled = false;
+    datasetImportButton.disabled = false;
 
     const reader = new FileReader();
     reader.onload = event => csvText = event.target.result;

@@ -24,25 +24,41 @@
             <div>
                 <p class="section-kicker">VİZE KAPSAMI</p>
                 <h2>Test veri seti</h2>
-                <p class="description">CSV dosyasını seçerek ilk kayıtları tarayıcı üzerinde önizleyin.</p>
+                <p class="description">CSV dosyasını önizleyip öğrenci bilgilerini veritabanına aktarın.</p>
             </div>
-            <span class="draft-badge">Önizleme</span>
+            <span class="draft-badge">Aktif</span>
         </div>
+
+        @if (TempData["DatasetMessage"] is string datasetMessage)
+        {
+            string messageType = TempData["DatasetMessageType"] as string ?? "error";
+            string messageClass = messageType == "success" ? "success-message" : "";
+            <p class="form-message @messageClass" role="status">@datasetMessage</p>
+        }
+
+        <form id="datasetUploadForm"
+              asp-controller="Admin"
+              asp-action="ImportDataset"
+              method="post"
+              enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
 
         <div class="dataset-upload-area">
             <label class="file-dropzone" for="datasetFile">
                 <span class="file-dropzone-icon">↑</span>
                 <span class="file-dropzone-title">CSV dosyası seçin</span>
                 <span class="file-dropzone-note">Öğrenci bilgilerini içeren .csv dosyası</span>
-                <input id="datasetFile" type="file" accept=".csv,text/csv" />
+                <input id="datasetFile" name="datasetFile" type="file" accept=".csv,text/csv" required />
             </label>
 
             <div class="dataset-file-info">
                 <p id="datasetFileName" class="dataset-file-name">Henüz dosya seçilmedi.</p>
                 <p id="datasetMessage" class="form-message" role="status"></p>
                 <button id="datasetPreviewButton" class="primary-button dataset-button" type="button" disabled>Önizlemeyi Göster</button>
+                <button id="datasetImportButton" class="primary-button dataset-button" type="submit" disabled>Veritabanına Aktar</button>
             </div>
         </div>
+        </form>
 
         <div id="datasetPreview" class="dataset-preview" hidden>
             <div class="preview-heading">

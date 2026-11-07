@@ -2,6 +2,9 @@ using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Text;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using StajYonetimSistemi.Data;
+using StajYonetimSistemi.Models;
 
 namespace StajYonetimSistemi.Services;
 
@@ -19,6 +22,10 @@ public class StudentDatasetImportResult
 
     // Doğrulaması tamamlanmış öğrenci kayıtlarını tutma
     public List<StudentDatasetImportRow> ValidatedRows { get; set; } = new List<StudentDatasetImportRow>();
+
+    // Veritabanına eklenen ve güncellenen kayıt sayılarını tutma
+    public int AddedCount { get; set; }
+    public int UpdatedCount { get; set; }
 
     // Kullanıcıya gösterilecek hata mesajlarını tutma
     public List<string> Errors { get; set; } = new List<string>();
@@ -60,6 +67,127 @@ public class StudentDatasetImportService
 {
     // CSV dosyasının izin verilen en yüksek boyutunu belirleme
     private const long MaxFileSize = 10 * 1024 * 1024;
+
+    private readonly StajDbContext database;
+
+    public StudentDatasetImportService(StajDbContext database)
+    {
+        this.database = database;
+    }
+
+    // Doğrulanmış CSV kayıtlarını veritabanına aktarma
+    public async Task<StudentDatasetImportResult> ImportAsync(
+        IFormFile? file,
+        CancellationToken cancellationToken)
+    {
+        StudentDatasetImportResult result = await ReadFileAsync(file, cancellationToken);
+
+        if (result.IsSuccess == false)
+        {
+            return result;
+        }
+
+        List<Student> students = await database.Students.ToListAsync(cancellationToken);
+        List<User> users = await database.Users
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+        HashSet<string> usedUserNames = users
+            .Select(user => user.UserName)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        HashSet<string> usedEmails = users
+            .Select(user => user.Email)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (StudentDatasetImportRow record in result.ValidatedRows)
+        {
+            // Öğrenciyi numara, kimlik numarası veya e-posta üzerinden bulma
+            List<Student> matches = students
+                .Where(student =>
+                    string.Equals(student.StudentNumber, record.StudentNumber, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(student.IdentityNumber, record.IdentityNumber, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(student.Email, record.Email, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (matches.Count > 1)
+            {
+                result.Errors.Add($"{record.RowNumber}. satir: Ogrenci bilgileri farkli kayitlarla eslesiyor.");
+                continue;
+            }
+
+            Student? student = matches.SingleOrDefault();
+
+            if (student is null)
+            {
+                // Test veri seti için giriş şifresi olmayan bir öğrenci kaydı oluşturma
+                string userName = CreateDatasetUserName(record.StudentNumber);
+
+                if (usedUserNames.Contains(userName))
+                {
+                    result.Errors.Add($"{record.RowNumber}. satir: Test veri seti kullanici adi zaten kullaniliyor.");
+                    continue;
+                }
+
+                if (usedEmails.Contains(record.Email))
+                {
+                    result.Errors.Add($"{record.RowNumber}. satir: E-posta adresi baska bir hesaba ait.");
+                    continue;
+                }
+
+                student = new Student
+                {
+                    UserName = userName,
+                    PasswordHash = "",
+                    Role = "Student"
+                };
+
+                database.Students.Add(student);
+                students.Add(student);
+                usedUserNames.Add(userName);
+                usedEmails.Add(record.Email);
+                result.AddedCount++;
+            }
+            else
+            {
+                // Güncellenecek kaydın e-posta adresinin başka hesaba ait olmadığını kontrol etme
+                bool emailBelongsToAnotherUser = users.Any(user =>
+                    user.Id != student.Id &&
+                    string.Equals(user.Email, record.Email, StringComparison.OrdinalIgnoreCase));
+
+                if (emailBelongsToAnotherUser)
+                {
+                    result.Errors.Add($"{record.RowNumber}. satir: E-posta adresi baska bir hesaba ait.");
+                    continue;
+                }
+
+                result.UpdatedCount++;
+            }
+
+            ApplyRecord(student, record);
+        }
+
+        if (result.Errors.Count > 0)
+        {
+            return result;
+        }
+
+        try
+        {
+            // Tüm satırları tek veritabanı işlemi içinde kaydetme
+            await using Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction transaction =
+                await database.Database.BeginTransactionAsync(cancellationToken);
+
+            await database.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            result.Errors.Add("CSV kayitlari veritabanina aktarilirken bir hata olustu.");
+            result.AddedCount = 0;
+            result.UpdatedCount = 0;
+        }
+
+        return result;
+    }
 
     // CSV dosyasını aktarım için okuyup temel dosya kontrollerini yapma
     public async Task<StudentDatasetImportResult> ReadFileAsync(
@@ -408,6 +536,33 @@ public class StudentDatasetImportService
             "belirtilmedi" or "bilinmiyor" => 2,
             _ => -1
         };
+    }
+
+    private static void ApplyRecord(Student student, StudentDatasetImportRow record)
+    {
+        // CSV alanlarını öğrenci modeline aktarma
+        student.FullName = record.FullName;
+        student.IdentityNumber = record.IdentityNumber;
+        student.Nationality = record.Nationality;
+        student.StudentNumber = record.StudentNumber;
+        student.BirthDate = record.BirthDate;
+        student.Address = record.Address;
+        student.Department = record.Department;
+        student.AcademicYear = record.AcademicYear;
+        student.PreviousInternshipDays = record.PreviousInternshipDays;
+        student.Email = record.Email;
+        student.PhoneNumber = record.PhoneNumber;
+        student.HealthAidStatus = record.HealthAidStatus;
+    }
+
+    private static string CreateDatasetUserName(string studentNumber)
+    {
+        // Test kaydı için öğrenci numarasından benzersiz kullanıcı adı üretme
+        string safeStudentNumber = new string(studentNumber
+            .Where(character => char.IsLetterOrDigit(character))
+            .ToArray());
+
+        return $"dataset_{safeStudentNumber}";
     }
 
     private static string Normalize(string value)

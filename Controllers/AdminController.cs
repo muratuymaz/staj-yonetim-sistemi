@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using StajYonetimSistemi.Data;
 using StajYonetimSistemi.Filters;
 using StajYonetimSistemi.Models;
+using StajYonetimSistemi.Services;
 
 namespace StajYonetimSistemi.Controllers
 {
@@ -10,10 +11,14 @@ namespace StajYonetimSistemi.Controllers
     public class AdminController : Controller
     {
         private readonly StajDbContext database;
+        private readonly StudentDatasetImportService datasetImportService;
 
-        public AdminController(StajDbContext database)
+        public AdminController(
+            StajDbContext database,
+            StudentDatasetImportService datasetImportService)
         {
             this.database = database;
+            this.datasetImportService = datasetImportService;
         }
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -36,6 +41,32 @@ namespace StajYonetimSistemi.Controllers
                 .ToList();
 
             return View(model);
+        }
+
+        // Admin tarafindan test veri setini okuyup veritabanina aktarma
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ImportDataset(
+            IFormFile? datasetFile,
+            CancellationToken cancellationToken)
+        {
+            StudentDatasetImportResult result = await datasetImportService.ImportAsync(
+                datasetFile,
+                cancellationToken);
+
+            if (result.IsSuccess)
+            {
+                TempData["DatasetMessage"] =
+                    $"CSV aktarimi tamamlandi. Eklenen: {result.AddedCount}, guncellenen: {result.UpdatedCount}.";
+                TempData["DatasetMessageType"] = "success";
+            }
+            else
+            {
+                TempData["DatasetMessage"] = string.Join(" ", result.Errors.Take(5));
+                TempData["DatasetMessageType"] = "error";
+            }
+
+            return RedirectToAction(nameof(Index));
         }
 
         private static AdminStudentViewModel CreateStudentRow(

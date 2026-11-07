@@ -13,6 +13,8 @@ public class StajDbContext : DbContext
         Students = Set<Student>();
         Documents = Set<Document>();
         LoginAttempts = Set<LoginAttempt>();
+        TestStudents = Set<TestStudent>();
+        DocumentReadResults = Set<DocumentReadResult>();
     }
 
     // Tabloları tanımlama
@@ -20,6 +22,8 @@ public class StajDbContext : DbContext
     public DbSet<Student> Students { get; set; }
     public DbSet<Document> Documents { get; set; }
     public DbSet<LoginAttempt> LoginAttempts { get; set; }
+    public DbSet<TestStudent> TestStudents { get; set; }
+    public DbSet<DocumentReadResult> DocumentReadResults { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -60,6 +64,18 @@ public class StajDbContext : DbContext
             .WithMany()
             .HasForeignKey(document => document.StudentId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Her belge için tek okuma sonucu tutma
+        modelBuilder.Entity<DocumentReadResult>()
+            .HasOne<Document>()
+            .WithOne()
+            .HasForeignKey<DocumentReadResult>(result => result.DocumentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Referans öğrenci numaralarının tekrarını engelleme
+        modelBuilder.Entity<TestStudent>()
+            .HasIndex(student => student.StudentNumber)
+            .IsUnique();
 
         // Kullanıcı silinse de giriş kayıtlarını koruma
         modelBuilder.Entity<LoginAttempt>()

@@ -62,13 +62,32 @@ namespace StajYonetimSistemi.Controllers
             profile.PreviousInternshipDays = student.PreviousInternshipDays;
             profile.HealthAidStatus = student.HealthAidStatus;
 
+            // Son yüklemede girilen staj bilgilerini getirme
+            Document? lastDocument = database.Documents
+                .Where(document => document.StudentId == userId)
+                .OrderByDescending(document => document.UploadedAt)
+                .ThenByDescending(document => document.Id)
+                .FirstOrDefault();
+
+            if (lastDocument != null)
+            {
+                profile.InternshipStartDate = lastDocument.InternshipStartDate.GetValueOrDefault();
+                profile.InternshipEndDate = lastDocument.InternshipEndDate.GetValueOrDefault();
+                profile.InternshipDays = lastDocument.WeeklyWorkDays
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .ToList();
+            }
+
             return Json(profile);
         }
 
-        // Öğrenci bilgilerini giriş yapan hesaba kaydetme
+        // Öğrenci formunu ve Ek-16 dosyasını birlikte kaydetme
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Profile([FromForm] StudentProfileForm form)
+        public async Task<IActionResult> Upload(
+            [FromForm] StudentProfileForm form,
+            IFormFile? file,
+            CancellationToken cancellationToken)
         {
             if (ModelState.IsValid == false)
             {
@@ -121,6 +140,67 @@ namespace StajYonetimSistemi.Controllers
                 return BadRequest("Sağlık yardımı statüsü geçersiz.");
             }
 
+            if (form.InternshipStartDate == DateTime.MinValue ||
+                form.InternshipEndDate == DateTime.MinValue)
+            {
+                return BadRequest("Staj başlangıç ve bitiş tarihlerini girin.");
+            }
+
+            if (form.InternshipEndDate < form.InternshipStartDate)
+            {
+                return BadRequest("Staj bitiş tarihi başlangıç tarihinden önce olamaz.");
+            }
+
+            // Seçilen günleri kontrol edip sıraya koyma
+            List<string> allowedDays = new List<string>
+            {
+                "monday", "tuesday", "wednesday", "thursday", "friday"
+            };
+            List<string> selectedDays = new List<string>();
+
+            if (form.InternshipDays == null || form.InternshipDays.Count == 0)
+            {
+                return BadRequest("En az bir staj günü seçin.");
+            }
+
+            foreach (string day in form.InternshipDays)
+            {
+                if (string.IsNullOrWhiteSpace(day))
+                {
+                    return BadRequest("Seçilen staj günü geçersiz.");
+                }
+
+                string selectedDay = day.Trim().ToLowerInvariant();
+                if (allowedDays.Contains(selectedDay) == false)
+                {
+                    return BadRequest("Seçilen staj günü geçersiz.");
+                }
+
+                selectedDays.Add(selectedDay);
+            }
+
+            List<string> orderedDays = allowedDays
+                .Where(day => selectedDays.Contains(day))
+                .ToList();
+            string weeklyWorkDays = string.Join(",", orderedDays);
+
+            // Dosyayı bilgiler kaydedilmeden önce kontrol etme
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest("Bilgi formuyla birlikte Ek-16 dosyasını seçin.");
+            }
+
+            if (file.Length > MaxFileSize)
+            {
+                return BadRequest("Dosya boyutu en fazla 10 MB olabilir.");
+            }
+
+            string? validationError = await fileValidator.ValidateAsync(file, cancellationToken);
+            if (validationError != null)
+            {
+                return BadRequest(validationError);
+            }
+
             // Hesap bilgisini formdan değil oturumdan alma
             int userId = Convert.ToInt32(HttpContext.Session.GetInt32("UserId"));
 
@@ -148,69 +228,6 @@ namespace StajYonetimSistemi.Controllers
             if (student == null)
             {
                 return NotFound("Öğrenci hesabı bulunamadı.");
-            }
-
-            // Yalnızca formdaki öğrenci bilgilerini güncelleme
-            student.Email = form.Email;
-            student.FullName = form.FullName;
-            student.StudentNumber = form.StudentNumber;
-            student.IdentityNumber = form.IdentityNumber;
-            student.Nationality = form.Nationality;
-            student.BirthDate = form.BirthDate;
-            student.Address = form.Address;
-            student.PhoneNumber = form.PhoneNumber;
-            student.Department = form.Department;
-            student.AcademicYear = form.AcademicYear;
-            student.PreviousInternshipDays = form.PreviousInternshipDays;
-            student.HealthAidStatus = form.HealthAidStatus;
-
-            database.SaveChanges();
-
-            return Ok("Öğrenci bilgileri kaydedildi.");
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Upload(
-            IFormFile? file,
-            CancellationToken cancellationToken)
-        {
-            if (file is null || file.Length == 0)
-            {
-                TempData["UploadMessage"] = "Lütfen bir dosya seçin.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            if (file.Length > MaxFileSize)
-            {
-                TempData["UploadMessage"] = "Dosya boyutu en fazla 10 MB olabilir.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            // İçerik doğrulaması başarısızsa dosyayı kaydetme veya Document oluşturmuyoruz.
-            string? validationError =
-                await fileValidator.ValidateAsync(file, cancellationToken);
-            if (validationError is not null)
-            {
-                TempData["UploadMessage"] = validationError;
-                return RedirectToAction(nameof(Index));
-            }
-
-            // TPT kalıtımında oturumdaki UserId, Student.Id ile aynıdır.
-            int userId = HttpContext.Session.GetInt32("UserId") ?? 0;
-            Student? student = await database.Students
-                .SingleOrDefaultAsync(item => item.Id == userId, cancellationToken);
-
-            if (student is null)
-            {
-                TempData["UploadMessage"] = "Öğrenci kaydı bulunamadı.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            if (string.IsNullOrWhiteSpace(student.StudentNumber))
-            {
-                TempData["UploadMessage"] = "Önce öğrenci bilgilerinizi doldurun.";
-                return RedirectToAction(nameof(Index));
             }
 
             // Kullanıcının dosya adını fiziksel yolda kullanmıyor, GUID ile çakışmayı önlüyoruz.
@@ -243,21 +260,34 @@ namespace StajYonetimSistemi.Controllers
                 // Dosya tamamlandıktan sonra aynı klasörde nihai GUID adına taşı.
                 System.IO.File.Move(temporaryPath, finalPath);
 
-                document = new Document
-                {
-                    StudentId = student.Id,
-                    OriginalFileName = Path.GetFileName(file.FileName),
-                    FilePath = relativePath,
-                    UploadedAt = DateTime.UtcNow,
-                    Status = "Uploaded"
-                };
+                document = new Document();
+                document.StudentId = student.Id;
+                document.OriginalFileName = Path.GetFileName(file.FileName);
+                document.FilePath = relativePath;
+                document.UploadedAt = DateTime.UtcNow;
+                document.Status = "Uploaded";
+                document.InternshipStartDate = form.InternshipStartDate;
+                document.InternshipEndDate = form.InternshipEndDate;
+                document.WeeklyWorkDays = weeklyWorkDays;
+
+                // Yalnızca formdaki öğrenci bilgilerini güncelleme
+                student.Email = form.Email;
+                student.FullName = form.FullName;
+                student.StudentNumber = form.StudentNumber;
+                student.IdentityNumber = form.IdentityNumber;
+                student.Nationality = form.Nationality;
+                student.BirthDate = form.BirthDate;
+                student.Address = form.Address;
+                student.PhoneNumber = form.PhoneNumber;
+                student.Department = form.Department;
+                student.AcademicYear = form.AcademicYear;
+                student.PreviousInternshipDays = form.PreviousInternshipDays;
+                student.HealthAidStatus = form.HealthAidStatus;
 
                 database.Documents.Add(document);
 
-                // Belge satırı başarısız kaydedilirse aşağıdaki telafi adımı dosyayı temizler.
+                // Profil ve belgeyi tek veritabanı işlemiyle kaydetme
                 await database.SaveChangesAsync(cancellationToken);
-
-                TempData["UploadMessage"] = "Ek-16 dosyası başarıyla yüklendi.";
             }
             catch (OperationCanceledException)
             {
@@ -278,11 +308,11 @@ namespace StajYonetimSistemi.Controllers
                 TryDeleteUploadFile(finalPath);
                 logger.LogError(exception, "Ek-16 yükleme veya belge kaydı başarısız oldu.");
 
-                TempData["UploadMessage"] =
-                    "Dosya yüklenemedi veya belge kaydı oluşturulamadı. Lütfen tekrar deneyin.";
+                return StatusCode(500,
+                    "Bilgiler ve dosya kaydedilemedi. Lütfen tekrar deneyin.");
             }
 
-            return RedirectToAction(nameof(Index));
+            return Ok("Öğrenci bilgileri ve Ek-16 dosyası birlikte kaydedildi.");
         }
 
         private void TryDeleteUploadFile(string path)

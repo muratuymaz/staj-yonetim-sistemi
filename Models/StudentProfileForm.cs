@@ -16,6 +16,9 @@ public class StudentProfileForm
     private string academicYear = "";
     private int previousInternshipDays;
     private int healthAidStatus;
+    private DateTime internshipStartDate;
+    private DateTime internshipEndDate;
+    private List<string> internshipDays = new List<string>();
 
     // Öğrenci kimlik bilgilerini tutma
     [Required]
@@ -189,4 +192,43 @@ public class StudentProfileForm
             healthAidStatus = value;
         }
     }
+    public DateTime InternshipStartDate
+    {
+        get
+        {
+            return internshipStartDate;
+        }
+
+        set
+        {
+            internshipStartDate = value;
+        }
+    }
+
+    public DateTime InternshipEndDate
+    {
+        get
+        {
+            return internshipEndDate;
+        }
+
+        set
+        {
+            internshipEndDate = value;
+        }
+    }
+
+    public List<string> InternshipDays
+    {
+        get
+        {
+            return internshipDays;
+        }
+
+        set
+        {
+            internshipDays = value;
+        }
+    }
+
 }

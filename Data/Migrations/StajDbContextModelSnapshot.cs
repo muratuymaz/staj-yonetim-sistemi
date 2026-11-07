@@ -26,6 +26,12 @@ namespace StajYonetimSistemi.Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("InternshipEndDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("InternshipStartDate")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("OriginalFileName")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -40,11 +46,89 @@ namespace StajYonetimSistemi.Data.Migrations
                     b.Property<DateTime>("UploadedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("WeeklyWorkDays")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.HasIndex("StudentId");
 
                     b.ToTable("Documents");
+                });
+
+            modelBuilder.Entity("StajYonetimSistemi.Models.DocumentReadResult", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AcademicYear")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("BirthDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Department")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("DocumentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("HealthAidStatus")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("IdentityNumber")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("InternshipDayCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("InternshipEndDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("InternshipStartDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Nationality")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("PreviousInternshipDays")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("ProcessedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("StudentNumber")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentId")
+                        .IsUnique();
+
+                    b.ToTable("DocumentReadResults");
                 });
 
             modelBuilder.Entity("StajYonetimSistemi.Models.LoginAttempt", b =>
@@ -72,6 +156,65 @@ namespace StajYonetimSistemi.Data.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("LoginAttempts");
+                });
+
+            modelBuilder.Entity("StajYonetimSistemi.Models.TestStudent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AcademicYear")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("BirthDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Department")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("HealthAidStatus")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("IdentityNumber")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Nationality")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PreviousInternshipDays")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("StudentNumber")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentNumber")
+                        .IsUnique();
+
+                    b.ToTable("TestStudents");
                 });
 
             modelBuilder.Entity("StajYonetimSistemi.Models.User", b =>
@@ -179,6 +322,15 @@ namespace StajYonetimSistemi.Data.Migrations
                         .WithMany()
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("StajYonetimSistemi.Models.DocumentReadResult", b =>
+                {
+                    b.HasOne("StajYonetimSistemi.Models.Document", null)
+                        .WithOne()
+                        .HasForeignKey("StajYonetimSistemi.Models.DocumentReadResult", "DocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 

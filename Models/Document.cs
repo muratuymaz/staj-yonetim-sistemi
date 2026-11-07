@@ -88,4 +88,48 @@ public class Document
             status = value;
         }
     }
+
+    // Formdan girilen staj bilgilerini tutma
+    private Nullable<DateTime> internshipStartDate;
+    private Nullable<DateTime> internshipEndDate;
+    private string weeklyWorkDays = "";
+
+    public Nullable<DateTime> InternshipStartDate
+    {
+        get
+        {
+            return internshipStartDate;
+        }
+
+        set
+        {
+            internshipStartDate = value;
+        }
+    }
+
+    public Nullable<DateTime> InternshipEndDate
+    {
+        get
+        {
+            return internshipEndDate;
+        }
+
+        set
+        {
+            internshipEndDate = value;
+        }
+    }
+
+    public string WeeklyWorkDays
+    {
+        get
+        {
+            return weeklyWorkDays;
+        }
+
+        set
+        {
+            weeklyWorkDays = value;
+        }
+    }
 }

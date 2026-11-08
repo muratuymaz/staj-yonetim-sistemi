@@ -36,6 +36,14 @@ async function loadSavedProfile() {
         setProfileValue("AcademicYear", profile.academicYear);
         setProfileValue("PreviousInternshipDays", profile.previousInternshipDays);
         setProfileValue("HealthAidStatus", profile.healthAidStatus);
+        setProfileValue("InternshipStartDate", profile.internshipStartDate?.substring(0, 10));
+        setProfileValue("InternshipEndDate", profile.internshipEndDate?.substring(0, 10));
+
+        // Son kayıtta seçilen haftalık staj günlerini yeniden işaretleme
+        const savedDays = profile.internshipDays ?? [];
+        profileForm.querySelectorAll("input[name='InternshipDays']").forEach(input => {
+            input.checked = savedDays.includes(input.value);
+        });
     } catch {
         // Profil bilgisi henüz oluşturulmadıysa form boş olarak açılır.
     }
@@ -52,6 +60,15 @@ if (profileForm && profileFormMessage) {
         if (!profileForm.checkValidity()) {
             profileForm.reportValidity();
             profileFormMessage.textContent = "Lütfen zorunlu alanları kontrol edin.";
+            return;
+        }
+
+        // Eski genel sağlık durumları yerine Ek-16'daki maddeyi seçtirme
+        const healthAidStatus = profileForm.querySelector("[name='HealthAidStatus']");
+
+        if (Number(healthAidStatus.value) < 3) {
+            profileFormMessage.textContent = "Ek-16'daki altı sağlık yardımı maddesinden birini seçin.";
+            healthAidStatus.focus();
             return;
         }
 
@@ -83,15 +100,12 @@ if (profileForm && profileFormMessage) {
 
             profileFormMessage.textContent = message || "Öğrenci bilgileri kaydedildi.";
             profileFormMessage.classList.add("success-message");
+            profileForm.querySelector("input[name='file']").value = "";
+            await loadSavedProfile();
         } catch {
             profileFormMessage.textContent = "Kayıt sırasında beklenmeyen bir hata oluştu.";
         } finally {
             button.disabled = false;
         }
-    });
-
-    profileForm.addEventListener("reset", function () {
-        profileFormMessage.textContent = "";
-        profileFormMessage.classList.remove("success-message");
     });
 }

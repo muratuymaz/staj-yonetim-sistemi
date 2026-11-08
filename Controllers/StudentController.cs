@@ -89,6 +89,12 @@ namespace StajYonetimSistemi.Controllers
             IFormFile? file,
             CancellationToken cancellationToken)
         {
+            // Ek-16 üzerindeki altı sağlık yardımı maddesinden birini seçtirme
+            if (form.HealthAidStatus < 3 || form.HealthAidStatus > 8)
+            {
+                return BadRequest("Ek-16'daki sağlık yardımı maddelerinden birini seçin.");
+            }
+
             if (ModelState.IsValid == false)
             {
                 return BadRequest("Öğrenci bilgilerini kontrol edin.");
@@ -133,11 +139,6 @@ namespace StajYonetimSistemi.Controllers
             if (form.PreviousInternshipDays < 0)
             {
                 return BadRequest("Önceki staj gün sayısı negatif olamaz.");
-            }
-
-            if (form.HealthAidStatus < 0 || form.HealthAidStatus > 2)
-            {
-                return BadRequest("Sağlık yardımı statüsü geçersiz.");
             }
 
             if (form.InternshipStartDate == DateTime.MinValue ||

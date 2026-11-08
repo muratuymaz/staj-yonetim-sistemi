@@ -17,22 +17,23 @@
         </form>
     </header>
 
-    <section class="panel-card profile-form-card">
-        <div class="panel-heading">
-            <div>
-                <p class="section-kicker">EK-16 BİLGİ FORMU</p>
-                <h2>Öğrenci bilgileri</h2>
-                <p class="description">Bilgileriniz oturum açtığınız öğrenci hesabına bağlı olarak veritabanına kaydedilir.</p>
+    <form id="studentProfileForm"
+          asp-controller="Student"
+          asp-action="Upload"
+          method="post"
+          enctype="multipart/form-data"
+          novalidate>
+        @Html.AntiForgeryToken()
+        <section class="panel-card profile-form-card">
+            <div class="panel-heading">
+                <div>
+                    <p class="section-kicker">EK-16 BİLGİ FORMU</p>
+                    <h2>Öğrenci bilgileri</h2>
+                    <p class="description">Bilgileriniz oturum açtığınız öğrenci hesabına bağlı olarak veritabanına kaydedilir.</p>
+                </div>
+                <span class="draft-badge">Form ve evrak birlikte kaydedilir</span>
             </div>
-            <span class="draft-badge">Kayıt aktif</span>
-        </div>
 
-        <form id="studentProfileForm"
-              asp-controller="Student"
-              asp-action="Profile"
-              method="post"
-              novalidate>
-            @Html.AntiForgeryToken()
             <div class="form-section">
                 <h3>Kimlik ve öğrenci bilgileri</h3>
 
@@ -117,13 +118,21 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="healthAidStatus">Sağlık yardımı / sigorta durumu <span class="required-mark">*</span></label>
+                        <label for="healthAidStatus">Ek-16 sağlık yardım statüsü <span class="required-mark">*</span></label>
                         <select id="healthAidStatus" name="HealthAidStatus" required>
                             <option value="">Seçiniz</option>
-                            <option value="0">Yararlanıyor</option>
-                            <option value="1">Yararlanmıyor</option>
-                            <option value="2">Belirtilmedi</option>
+                            <option value="3">1 - Genel Sağlık Sigortası kapsamındayım</option>
+                            <option value="4">2 - Anne-Baba üzerinden sağlık yardımı almaktayım</option>
+                            <option value="5">3 - Sosyal Sigortalar Kurumu'na tabi olarak çalıştığımdan kendi sağlık yardımım var</option>
+                            <option value="6">4 - Bağ-Kur'a tabi olarak çalıştığımdan kendi sağlık yardımım var</option>
+                            <option value="7">5 - Emekli Sandığı'na tabi olarak çalıştığımdan kendi sağlık yardımım var</option>
+                            <option value="8">6 - Herhangi bir sosyal güvencem olmadığından sağlık yardımı alamıyorum</option>
+                            @* Eski genel durumları yeniden açarken yanlış Ek-16 maddesine dönüştürmeme *@
+                            <option value="0" hidden>Önceki kayıt: Yararlanıyor (Ek-16 maddesini seçin)</option>
+                            <option value="1" hidden>Önceki kayıt: Yararlanmıyor (Ek-16 maddesini seçin)</option>
+                            <option value="2" hidden>Önceki kayıt: Belirtilmedi (Ek-16 maddesini seçin)</option>
                         </select>
+                        <small class="field-hint">Ek-16 üzerinde işaretlediğiniz maddeyi seçin.</small>
                     </div>
 
                     <div class="form-group">
@@ -169,40 +178,27 @@
                     <small class="field-hint">URL doğrulama ve otomatik form doldurma sonraki geliştirmede yapılacaktır.</small>
                 </div>
             </div>
+        </section>
 
-            <p id="profileFormMessage" class="form-message" role="status"></p>
-
-            <div class="form-actions">
-                <button class="primary-button form-save-button" type="submit">Formu Kaydet</button>
-                <button class="secondary-button" type="reset">Temizle</button>
+        <section class="panel-card upload-card">
+            <div>
+                <p class="section-kicker">STAJ EVRAĞI</p>
+                <h2>Ek-16 evrakı</h2>
+                <p class="description">Bilgileriniz ve Ek-16 dosyanız birlikte kaydedilir.</p>
             </div>
-        </form>
-    </section>
 
-    <section class="panel-card upload-card">
-        <div>
-            <p class="section-kicker">STAJ EVRAĞI</p>
-            <h2>Ek-16 evrakı</h2>
-            <p class="description">Bilgilerinizi tamamladıktan sonra staj evrağınızı yükleyebilirsiniz.</p>
-        </div>
+            <div>
+                <input type="file" name="file"
+                       accept=".doc,.docx,.pdf,.jpg,.jpeg,.png" required />
 
-        <form asp-controller="Student" asp-action="Upload"
-              method="post" enctype="multipart/form-data">
-            @Html.AntiForgeryToken()
-
-            <input type="file" name="file"
-                   accept=".doc,.docx,.pdf,.jpg,.jpeg,.png" required />
-
-            <button class="upload-button" type="submit">Evrak Yükle</button>
-        </form>
-        @if (TempData["UploadMessage"] is string message)
-        {
-            <p class="form-message upload-message" role="status">@message</p>
-        }
-    </section>
+                <p id="profileFormMessage" class="form-message" role="status"></p>
+                <button class="primary-button upload-button" type="submit">Bilgileri ve Ek-16'yı Kaydet</button>
+            </div>
+        </section>
+    </form>
 </div>
 
 @section Scripts {
     <script src="~/js/logout.js"></script>
-    <script src="~/js/student.js?v=3"></script>
+    <script src="~/js/student.js?v=4"></script>
 }

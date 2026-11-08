@@ -178,8 +178,8 @@ public class StudentProfileForm
         }
     }
 
-    // Sağlık yardımı seçimini tutma
-    [Range(0, 2)]
+    // Eski 0-2 değerlerini değiştirmeden Ek-16'daki altı maddeyi 3-8 arasında tutma
+    [Range(3, 8)]
     public int HealthAidStatus
     {
         get

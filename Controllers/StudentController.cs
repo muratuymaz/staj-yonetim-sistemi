@@ -14,6 +14,7 @@ namespace StajYonetimSistemi.Controllers
         private readonly StajDbContext database;
         private readonly IWebHostEnvironment environment;
         private readonly DocumentFileValidator fileValidator;
+        private readonly DocumentReaderService documentReaderService;
         private readonly ILogger<StudentController> logger;
 
         private const long MaxFileSize = 10 * 1024 * 1024;
@@ -22,11 +23,13 @@ namespace StajYonetimSistemi.Controllers
             StajDbContext database,
             IWebHostEnvironment environment,
             DocumentFileValidator fileValidator,
+            DocumentReaderService documentReaderService,
             ILogger<StudentController> logger)
         {
             this.database = database;
             this.environment = environment;
             this.fileValidator = fileValidator;
+            this.documentReaderService = documentReaderService;
             this.logger = logger;
         }
 
@@ -313,7 +316,31 @@ namespace StajYonetimSistemi.Controllers
                     "Bilgiler ve dosya kaydedilemedi. Lütfen tekrar deneyin.");
             }
 
-            return Ok("Öğrenci bilgileri ve Ek-16 dosyası birlikte kaydedildi.");
+            string extractedText = "";
+            string? extractionWarning = null;
+            if (extension is ".docx" or ".pdf")
+            {
+                try
+                {
+                    extractedText = documentReaderService.ReadText(finalPath);
+                }
+                catch (Exception exception)
+                {
+                    // Okuma hatası, başarıyla kaydedilmiş yüklemeyi başarısız göstermesin.
+                    logger.LogWarning(
+                        exception,
+                        "Yüklenen belgeden metin okunamadı. Belge kimliği: {DocumentId}",
+                        document.Id);
+                    extractionWarning = "Belge kaydedildi ancak metin içeriği okunamadı.";
+                }
+            }
+
+            return Ok(new
+            {
+                message = "Öğrenci bilgileri ve Ek-16 dosyası birlikte kaydedildi.",
+                extractedText,
+                extractionWarning
+            });
         }
 
         private void TryDeleteUploadFile(string path)

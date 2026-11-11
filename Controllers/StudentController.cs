@@ -15,6 +15,7 @@ namespace StajYonetimSistemi.Controllers
         private readonly IWebHostEnvironment environment;
         private readonly DocumentFileValidator fileValidator;
         private readonly DocumentReaderService documentReaderService;
+        private readonly Ek16FieldExtractor ek16FieldExtractor;
         private readonly ILogger<StudentController> logger;
 
         private const long MaxFileSize = 10 * 1024 * 1024;
@@ -24,12 +25,14 @@ namespace StajYonetimSistemi.Controllers
             IWebHostEnvironment environment,
             DocumentFileValidator fileValidator,
             DocumentReaderService documentReaderService,
+            Ek16FieldExtractor ek16FieldExtractor,
             ILogger<StudentController> logger)
         {
             this.database = database;
             this.environment = environment;
             this.fileValidator = fileValidator;
             this.documentReaderService = documentReaderService;
+            this.ek16FieldExtractor = ek16FieldExtractor;
             this.logger = logger;
         }
 
@@ -318,27 +321,38 @@ namespace StajYonetimSistemi.Controllers
 
             string extractedText = "";
             string? extractionWarning = null;
+            DocumentReadResult? extractedFields = null;
             if (extension is ".docx" or ".pdf")
             {
                 try
                 {
                     extractedText = documentReaderService.ReadText(finalPath);
+                    extractedFields = ek16FieldExtractor.Extract(extractedText, document.Id);
+                    database.DocumentReadResults.Add(extractedFields);
+                    await database.SaveChangesAsync(cancellationToken);
+
+                    if (string.IsNullOrWhiteSpace(extractedText))
+                        extractionWarning = "Belge kaydedildi ancak okunabilir metin bulunamadı.";
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    throw;
                 }
                 catch (Exception exception)
                 {
                     // Okuma hatası, başarıyla kaydedilmiş yüklemeyi başarısız göstermesin.
                     logger.LogWarning(
                         exception,
-                        "Yüklenen belgeden metin okunamadı. Belge kimliği: {DocumentId}",
+                        "Yüklenen belgeden alanlar çıkarılamadı. Belge kimliği: {DocumentId}",
                         document.Id);
-                    extractionWarning = "Belge kaydedildi ancak metin içeriği okunamadı.";
+                    extractionWarning = "Belge kaydedildi ancak metin alanları çıkarılamadı.";
                 }
             }
 
             return Ok(new
             {
                 message = "Öğrenci bilgileri ve Ek-16 dosyası birlikte kaydedildi.",
-                extractedText,
+                extractedFields,
                 extractionWarning
             });
         }

@@ -31,6 +31,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<PasswordService>();
 builder.Services.AddScoped<DocumentFileValidator>();
 builder.Services.AddScoped<DocumentReaderService>();
+builder.Services.AddScoped<Ek16FieldExtractor>();
 builder.Services.AddScoped<StudentDatasetImportService>();
 
 // Oturum bilgilerini sunucu belleğinde tutma

@@ -76,6 +76,29 @@ namespace StajYonetimSistemi.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // Onaylanan son belgeyi admin tarafından tamamlandı durumuna geçirme
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CompleteDocument(int documentId, CancellationToken cancellationToken)
+        {
+            Document? document = await database.Documents.FindAsync(
+                new object[] { documentId }, cancellationToken);
+            if (document == null)
+                return NotFound();
+
+            bool hasNewerDocument = await database.Documents.AnyAsync(item =>
+                item.StudentId == document.StudentId && item.Id != document.Id &&
+                (item.UploadedAt > document.UploadedAt ||
+                 (item.UploadedAt == document.UploadedAt && item.Id > document.Id)), cancellationToken);
+
+            if (hasNewerDocument || document.Status != "Approved")
+                return BadRequest("Yalnızca öğrencinin son onaylanan belgesi tamamlanabilir.");
+
+            document.Status = "Completed";
+            await database.SaveChangesAsync(cancellationToken);
+            return RedirectToAction(nameof(Index));
+        }
+
         private static AdminStudentViewModel CreateStudentRow(
             Student student,
             Dictionary<int, Document> latestDocuments)
@@ -96,7 +119,8 @@ namespace StajYonetimSistemi.Controllers
                 Department = student.Department,
                 PhoneNumber = student.PhoneNumber,
                 DocumentStatus = statusText,
-                DocumentStatusKey = statusKey
+                DocumentStatusKey = statusKey,
+                DocumentId = document?.Id
             };
         }
 

@@ -1,5 +1,71 @@
 const profileForm = document.getElementById("studentProfileForm");
 const profileFormMessage = document.getElementById("profileFormMessage");
+const documentReport = document.getElementById("documentReport");
+const documentReportStatus = document.getElementById("documentReportStatus");
+const documentReportSummary = document.getElementById("documentReportSummary");
+const documentReportRows = document.getElementById("documentReportRows");
+
+const documentStatuses = {
+    Uploaded: "Yüklendi",
+    Reviewing: "İnceleniyor",
+    Incomplete: "Hatalı / Eksik",
+    Approved: "Onaylandı",
+    Completed: "Tamamlandı"
+};
+
+const comparisonLabels = {
+    FullName: "Ad soyad", IdentityNumber: "Kimlik no", Nationality: "Uyruk",
+    BirthDate: "Doğum tarihi", StudentNumber: "Öğrenci no", Department: "Bölüm",
+    Address: "Adres", AcademicYear: "Teslim yılı / yarıyılı",
+    PreviousInternshipDays: "Önceki staj günleri", Email: "E-posta",
+    PhoneNumber: "Telefon", InternshipStartDate: "Staj başlangıcı",
+    InternshipEndDate: "Staj bitişi"
+};
+
+const comparisonStatuses = {
+    match: "Eşleşiyor", mismatch: "Uyuşmuyor",
+    unreadable: "Belgeden okunamadı", formValueMissing: "Formda boş"
+};
+
+async function loadDocumentReport() {
+    const response = await fetch("/Student/Report", {
+        headers: { "Accept": "application/json" }
+    });
+    if (!response.ok) return;
+
+    const report = await response.json();
+    documentReport.hidden = !report.hasDocument;
+    if (!report.hasDocument) return;
+
+    documentReportStatus.textContent = `${report.originalFileName} — ${documentStatuses[report.status] ?? report.status}`;
+    documentReportRows.replaceChildren();
+
+    if (!report.fieldComparisons) {
+        documentReportSummary.textContent = "Bu dosya türünden alanlar otomatik okunamadı. Belge inceleme bekliyor.";
+        return;
+    }
+
+    const mismatches = report.fieldComparisons.filter(item => item.status !== "match").length;
+    documentReportSummary.textContent = mismatches === 0
+        ? report.status === "Completed"
+            ? "Alanlar eşleşiyor ve belge tamamlandı. Öğrenci tarafından değiştirilemez."
+            : "Kontrol edilen alanlar eşleşiyor. Belge teslime hazır; tamamlanması için admin işlemi bekleniyor."
+        : `${mismatches} alanda uyuşmazlık veya okunamayan bilgi var. Düzeltilmiş Ek-16 ile yeniden yükleyin.`;
+
+    for (const item of report.fieldComparisons) {
+        const row = document.createElement("tr");
+        for (const value of [
+            comparisonLabels[item.fieldName] ?? item.fieldName,
+            item.documentValue || "—", item.formValue || "—",
+            comparisonStatuses[item.status] ?? item.status
+        ]) {
+            const cell = document.createElement("td");
+            cell.textContent = value;
+            row.append(cell);
+        }
+        documentReportRows.append(row);
+    }
+}
 
 function setProfileValue(name, value) {
     const input = profileForm.querySelector(`[name='${name}']`);
@@ -51,6 +117,7 @@ async function loadSavedProfile() {
 
 if (profileForm && profileFormMessage) {
     loadSavedProfile();
+    loadDocumentReport().catch(() => {});
 
     profileForm.addEventListener("submit", async function (event) {
         event.preventDefault();
@@ -111,6 +178,7 @@ if (profileForm && profileFormMessage) {
             profileFormMessage.classList.add("success-message");
             profileForm.querySelector("input[name='file']").value = "";
             await loadSavedProfile();
+            await loadDocumentReport().catch(() => {});
         } catch {
             profileFormMessage.textContent = "Kayıt sırasında beklenmeyen bir hata oluştu.";
         } finally {

@@ -96,10 +96,6 @@
                         <input id="email" name="Email" type="email" autocomplete="email" placeholder="ornek@alanadi.com" required />
                     </div>
 
-                    <div class="form-group">
-                        <label for="fax">Faks <span class="optional-mark">(opsiyonel)</span></label>
-                        <input id="fax" name="Fax" type="tel" inputmode="tel" placeholder="Varsa faks numarası" />
-                    </div>
                 </div>
             </div>
 
@@ -108,7 +104,7 @@
 
                 <div class="form-grid two-columns">
                     <div class="form-group">
-                        <label for="academicYear">Öğretim yılı / yarıyıl <span class="required-mark">*</span></label>
+                        <label for="academicYear">Ek-16 teslim yılı / yarıyılı <span class="required-mark">*</span></label>
                         <input id="academicYear" name="AcademicYear" type="text" placeholder="Örn. 2025-2026 Bahar" required />
                     </div>
 
@@ -136,16 +132,6 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="internshipSemester">Teslim edilen yarıyıl <span class="required-mark">*</span></label>
-                        <select id="internshipSemester" name="InternshipSemester" required>
-                            <option value="">Seçiniz</option>
-                            <option value="fall">Güz</option>
-                            <option value="spring">Bahar</option>
-                            <option value="summer">Yaz</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
                         <label for="internshipStartDate">Staj başlangıç tarihi <span class="required-mark">*</span></label>
                         <input id="internshipStartDate" name="InternshipStartDate" type="date" required />
                     </div>
@@ -168,16 +154,6 @@
                     </fieldset>
                 </div>
             </div>
-
-            <div class="form-section">
-                <h3>Staj evrağı teslim bağlantısı</h3>
-
-                <div class="form-group">
-                    <label for="googleFormUrl">Staj evrağı teslim Google Form URL'si <span class="optional-mark">(opsiyonel)</span></label>
-                    <input id="googleFormUrl" name="GoogleFormUrl" type="url" placeholder="https://docs.google.com/forms/..." />
-                    <small class="field-hint">URL doğrulama ve otomatik form doldurma sonraki geliştirmede yapılacaktır.</small>
-                </div>
-            </div>
         </section>
 
         <section class="panel-card upload-card">
@@ -196,9 +172,22 @@
             </div>
         </section>
     </form>
+
+    <section id="documentReport" class="panel-card" hidden>
+        <p class="section-kicker">SON EK-16 BELGESİ</p>
+        <h2>Belge kontrol sonucu</h2>
+        <p id="documentReportStatus" role="status"></p>
+        <p id="documentReportSummary" class="description"></p>
+        <div class="table-wrapper">
+            <table class="admin-table">
+                <thead><tr><th>Alan</th><th>Belgedeki değer</th><th>Formdaki değer</th><th>Sonuç</th></tr></thead>
+                <tbody id="documentReportRows"></tbody>
+            </table>
+        </div>
+    </section>
 </div>
 
 @section Scripts {
     <script src="~/js/logout.js"></script>
-    <script src="~/js/student.js?v=4"></script>
+    <script src="~/js/student.js?v=5"></script>
 }

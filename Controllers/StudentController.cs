@@ -90,6 +90,42 @@ namespace StajYonetimSistemi.Controllers
             return Json(profile);
         }
 
+        // Son Ek-16 belgesinin durumunu ve alan karşılaştırmasını öğrenciye gösterme
+        [HttpGet]
+        public async Task<IActionResult> Report(CancellationToken cancellationToken)
+        {
+            int userId = Convert.ToInt32(HttpContext.Session.GetInt32("UserId"));
+            Student? student = await database.Students.FindAsync(new object[] { userId }, cancellationToken);
+            Document? document = await database.Documents
+                .Where(item => item.StudentId == userId)
+                .OrderByDescending(item => item.UploadedAt)
+                .ThenByDescending(item => item.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (student == null || document == null)
+                return Json(new { hasDocument = false });
+
+            DocumentReadResult? readResult = await database.DocumentReadResults
+                .AsNoTracking()
+                .FirstOrDefaultAsync(item => item.DocumentId == document.Id, cancellationToken);
+
+            List<FieldComparisonResult>? comparisons = null;
+            if (readResult != null)
+            {
+                StudentProfileForm savedForm = CreateSavedForm(student, document);
+                comparisons = documentFieldComparisonService.Compare(readResult, savedForm);
+            }
+
+            return Json(new
+            {
+                hasDocument = true,
+                document.OriginalFileName,
+                document.UploadedAt,
+                document.Status,
+                fieldComparisons = comparisons
+            });
+        }
+
         // Öğrenci formunu ve Ek-16 dosyasını birlikte kaydetme
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -240,6 +276,12 @@ namespace StajYonetimSistemi.Controllers
                 return NotFound("Öğrenci hesabı bulunamadı.");
             }
 
+            // Tamamlanan başvuruyu öğrenci tarafından değiştirmeme
+            bool hasCompletedDocument = await database.Documents.AnyAsync(item =>
+                item.StudentId == userId && item.Status == "Completed", cancellationToken);
+            if (hasCompletedDocument)
+                return Conflict("Tamamlanan Ek-16 belgesi öğrenci tarafından değiştirilemez.");
+
             // Kullanıcının dosya adını fiziksel yolda kullanmıyor, GUID ile çakışmayı önlüyoruz.
             string extension = Path.GetExtension(file.FileName).ToLowerInvariant();
             string storedFileName = $"{Guid.NewGuid():N}{extension}";
@@ -336,6 +378,13 @@ namespace StajYonetimSistemi.Controllers
                     await database.SaveChangesAsync(cancellationToken);
                     fieldComparisons = documentFieldComparisonService.Compare(extractedFields, form);
 
+                    // Tüm okunabilen alanlar eşleşmeden belgeyi onaylamama
+                    document.Status = fieldComparisons.All(item =>
+                        item.Status == FieldComparisonStatus.Match)
+                        ? "Approved"
+                        : "Incomplete";
+                    await database.SaveChangesAsync(cancellationToken);
+
                     if (string.IsNullOrWhiteSpace(extractedText))
                         extractionWarning = "Belge kaydedildi ancak okunabilir metin bulunamadı.";
                 }
@@ -354,13 +403,44 @@ namespace StajYonetimSistemi.Controllers
                 }
             }
 
+            // Otomatik okuma yapılamayan belgeleri admin incelemesine bırakma
+            if (document.Status == "Uploaded")
+            {
+                document.Status = "Reviewing";
+                await database.SaveChangesAsync(cancellationToken);
+            }
+
             return Ok(new
             {
                 message = "Öğrenci bilgileri ve Ek-16 dosyası birlikte kaydedildi.",
                 extractedFields,
                 fieldComparisons,
+                documentStatus = document.Status,
                 extractionWarning
             });
+        }
+
+        private static StudentProfileForm CreateSavedForm(Student student, Document document)
+        {
+            return new StudentProfileForm
+            {
+                Email = student.Email,
+                StudentNumber = student.StudentNumber,
+                FullName = student.FullName,
+                IdentityNumber = student.IdentityNumber,
+                Nationality = student.Nationality,
+                BirthDate = student.BirthDate,
+                Address = student.Address,
+                PhoneNumber = student.PhoneNumber,
+                Department = student.Department,
+                AcademicYear = student.AcademicYear,
+                PreviousInternshipDays = student.PreviousInternshipDays,
+                HealthAidStatus = student.HealthAidStatus,
+                InternshipStartDate = document.InternshipStartDate.GetValueOrDefault(),
+                InternshipEndDate = document.InternshipEndDate.GetValueOrDefault(),
+                InternshipDays = document.WeeklyWorkDays
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries).ToList()
+            };
         }
 
         private void TryDeleteUploadFile(string path)

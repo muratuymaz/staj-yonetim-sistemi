@@ -144,7 +144,17 @@
                             <td>@(string.IsNullOrWhiteSpace(student.Department) ? "-" : student.Department)</td>
                             <td>@student.Email</td>
                             <td>@(string.IsNullOrWhiteSpace(student.PhoneNumber) ? "-" : student.PhoneNumber)</td>
-                            <td><span class="status-pill status-@student.DocumentStatusKey">@student.DocumentStatus</span></td>
+                            <td>
+                                <span class="status-pill status-@student.DocumentStatusKey">@student.DocumentStatus</span>
+                                @if (student.DocumentStatusKey == "approved" && student.DocumentId.HasValue)
+                                {
+                                    <form asp-controller="Admin" asp-action="CompleteDocument" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="documentId" value="@student.DocumentId" />
+                                        <button class="secondary-button" type="submit">Tamamlandı olarak işaretle</button>
+                                    </form>
+                                }
+                            </td>
                         </tr>
                     }
                 </tbody>

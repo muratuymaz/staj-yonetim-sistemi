@@ -12,4 +12,5 @@ public class AdminStudentViewModel
     public string PhoneNumber { get; set; } = "";
     public string DocumentStatus { get; set; } = "Yüklenmedi";
     public string DocumentStatusKey { get; set; } = "not-uploaded";
+    public int? DocumentId { get; set; }
 }

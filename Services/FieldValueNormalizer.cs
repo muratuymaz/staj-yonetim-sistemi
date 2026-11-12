@@ -48,4 +48,11 @@ public static class FieldValueNormalizer
     {
         return value?.ToString(CultureInfo.InvariantCulture) ?? "";
     }
+
+    public static string NormalizeNumber(string? value)
+    {
+        return int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int number)
+            ? NormalizeNumber(number)
+            : "";
+    }
 }

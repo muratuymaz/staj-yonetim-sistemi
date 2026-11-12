@@ -16,6 +16,7 @@ namespace StajYonetimSistemi.Controllers
         private readonly DocumentFileValidator fileValidator;
         private readonly DocumentReaderService documentReaderService;
         private readonly Ek16FieldExtractor ek16FieldExtractor;
+        private readonly DocumentFieldComparisonService documentFieldComparisonService;
         private readonly ILogger<StudentController> logger;
 
         private const long MaxFileSize = 10 * 1024 * 1024;
@@ -26,6 +27,7 @@ namespace StajYonetimSistemi.Controllers
             DocumentFileValidator fileValidator,
             DocumentReaderService documentReaderService,
             Ek16FieldExtractor ek16FieldExtractor,
+            DocumentFieldComparisonService documentFieldComparisonService,
             ILogger<StudentController> logger)
         {
             this.database = database;
@@ -33,6 +35,7 @@ namespace StajYonetimSistemi.Controllers
             this.fileValidator = fileValidator;
             this.documentReaderService = documentReaderService;
             this.ek16FieldExtractor = ek16FieldExtractor;
+            this.documentFieldComparisonService = documentFieldComparisonService;
             this.logger = logger;
         }
 
@@ -322,6 +325,7 @@ namespace StajYonetimSistemi.Controllers
             string extractedText = "";
             string? extractionWarning = null;
             DocumentReadResult? extractedFields = null;
+            List<FieldComparisonResult>? fieldComparisons = null;
             if (extension is ".docx" or ".pdf")
             {
                 try
@@ -330,6 +334,7 @@ namespace StajYonetimSistemi.Controllers
                     extractedFields = ek16FieldExtractor.Extract(extractedText, document.Id);
                     database.DocumentReadResults.Add(extractedFields);
                     await database.SaveChangesAsync(cancellationToken);
+                    fieldComparisons = documentFieldComparisonService.Compare(extractedFields, form);
 
                     if (string.IsNullOrWhiteSpace(extractedText))
                         extractionWarning = "Belge kaydedildi ancak okunabilir metin bulunamadı.";
@@ -353,6 +358,7 @@ namespace StajYonetimSistemi.Controllers
             {
                 message = "Öğrenci bilgileri ve Ek-16 dosyası birlikte kaydedildi.",
                 extractedFields,
+                fieldComparisons,
                 extractionWarning
             });
         }

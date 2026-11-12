@@ -36,14 +36,21 @@ namespace StajYonetimSistemi.Controllers
                 .GroupBy(document => document.StudentId)
                 .ToDictionary(group => group.Key, group => group.First());
 
-            List<AdminStudentViewModel> model = students
+            // CSV referansları ile kendi hesabını oluşturan öğrencileri ayrı gösterme
+            AdminDashboardViewModel model = new AdminDashboardViewModel();
+            model.TestStudents = await database.TestStudents
+                .AsNoTracking()
+                .OrderBy(student => student.FullName)
+                .ThenBy(student => student.StudentNumber)
+                .ToListAsync(cancellationToken);
+            model.Students = students
                 .Select(student => CreateStudentRow(student, latestDocuments))
                 .ToList();
 
             return View(model);
         }
 
-        // Admin tarafindan test veri setini okuyup veritabanina aktarma
+        // Admin tarafından test veri setini referans tablosuna aktarma
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ImportDataset(
@@ -57,7 +64,7 @@ namespace StajYonetimSistemi.Controllers
             if (result.IsSuccess)
             {
                 TempData["DatasetMessage"] =
-                    $"CSV aktarimi tamamlandi. Eklenen: {result.AddedCount}, guncellenen: {result.UpdatedCount}.";
+                    $"CSV referans verisi kaydedildi. Yeni: {result.AddedCount}, güncellenen referans: {result.UpdatedCount}.";
                 TempData["DatasetMessageType"] = "success";
             }
             else

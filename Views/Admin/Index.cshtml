@@ -1,4 +1,4 @@
-@model List<StajYonetimSistemi.Models.AdminStudentViewModel>
+@model StajYonetimSistemi.Models.AdminDashboardViewModel
 
 @{
     Layout = "_Layout";
@@ -10,7 +10,7 @@
         <div>
             <p class="eyebrow">STAJ YÖNETİM SİSTEMİ</p>
             <h1>Admin Paneli</h1>
-            <p class="description">Test veri setini ve kayıtlı öğrencileri görüntüleyin.</p>
+            <p class="description">CSV referans verilerini ve öğrenci hesaplarını ayrı görüntüleyin.</p>
         </div>
 
         <form id="logoutForm" asp-controller="Account" asp-action="Logout" method="post">
@@ -24,7 +24,7 @@
             <div>
                 <p class="section-kicker">VİZE KAPSAMI</p>
                 <h2>Test veri seti</h2>
-                <p class="description">CSV dosyasını önizleyip öğrenci bilgilerini veritabanına aktarın.</p>
+                <p class="description">CSV dosyasını önizleyip ayrı referans veri olarak kaydedin. Bu işlem öğrenci hesabı oluşturmaz veya kayıtlı öğrenci profilini değiştirmez.</p>
             </div>
             <span class="draft-badge">Aktif</span>
         </div>
@@ -55,7 +55,7 @@
                 <p id="datasetFileName" class="dataset-file-name">Henüz dosya seçilmedi.</p>
                 <p id="datasetMessage" class="form-message" role="status"></p>
                 <button id="datasetPreviewButton" class="primary-button dataset-button" type="button" disabled>Önizlemeyi Göster</button>
-                <button id="datasetImportButton" class="primary-button dataset-button" type="submit" disabled>Veritabanına Aktar</button>
+                <button id="datasetImportButton" class="primary-button dataset-button" type="submit" disabled>Referans Veriyi Kaydet</button>
             </div>
         </div>
         </form>
@@ -69,16 +69,56 @@
                 <table id="datasetPreviewTable" class="admin-table"></table>
             </div>
         </div>
+
+        <div class="dataset-preview">
+            <div class="preview-heading">
+                <h3>Kaydedilen referans öğrenciler</h3>
+                <span class="student-count-badge">@Model.TestStudents.Count kayıt</span>
+            </div>
+
+            @if (Model.TestStudents.Count == 0)
+            {
+                <p class="description">Henüz test veri seti yüklenmedi.</p>
+            }
+            else
+            {
+                <div class="table-wrapper">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Ad soyad</th>
+                                <th>Öğrenci no</th>
+                                <th>Bölüm</th>
+                                <th>Öğretim yılı</th>
+                                <th>E-posta</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var reference in Model.TestStudents)
+                            {
+                                <tr>
+                                    <td>@reference.FullName</td>
+                                    <td>@reference.StudentNumber</td>
+                                    <td>@reference.Department</td>
+                                    <td>@reference.AcademicYear</td>
+                                    <td>@reference.Email</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
     </section>
 
     <section class="admin-card">
         <div class="admin-card-heading">
             <div>
                 <p class="section-kicker">ÖĞRENCİ KAYITLARI</p>
-                <h2>Öğrenciler</h2>
-                <p class="description">Kayıtlar veritabanından okunmaktadır.</p>
+                <h2>Kayıtlı öğrenciler</h2>
+                <p class="description">Yeni CSV yüklemeleri bu listeye öğrenci hesabı eklemez.</p>
             </div>
-            <span class="student-count-badge">@Model.Count öğrenci</span>
+            <span class="student-count-badge">@Model.Students.Count öğrenci</span>
         </div>
 
         <div class="table-wrapper">
@@ -95,7 +135,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var student in Model)
+                    @foreach (var student in Model.Students)
                     {
                         <tr>
                             <td><strong>@student.FullName</strong><small>@student.UserName</small></td>

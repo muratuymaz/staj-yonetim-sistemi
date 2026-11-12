@@ -64,7 +64,7 @@ function renderCsvPreview() {
     datasetPreviewTable.innerHTML = `<thead><tr>${headerHtml}</tr></thead><tbody>${rowHtml}</tbody>`;
     datasetRowCount.textContent = `${lines.length - 1} kayıt bulundu, ilk ${rows.length} kayıt gösteriliyor.`;
     datasetPreview.hidden = false;
-    datasetMessage.textContent = "Önizleme hazırlandı. Aktarmak için Veritabanına Aktar butonuna basın.";
+    datasetMessage.textContent = "Önizleme hazırlandı. Test referanslarını kaydetmek için Referans Veriyi Kaydet butonuna basın.";
     datasetMessage.classList.add("success-message");
 }
 

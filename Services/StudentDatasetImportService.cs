@@ -23,7 +23,7 @@ public class StudentDatasetImportResult
     // Doğrulaması tamamlanmış öğrenci kayıtlarını tutma
     public List<StudentDatasetImportRow> ValidatedRows { get; set; } = new List<StudentDatasetImportRow>();
 
-    // Veritabanına eklenen ve güncellenen kayıt sayılarını tutma
+    // Referans tablosuna eklenen ve güncellenen kayıt sayılarını tutma
     public int AddedCount { get; set; }
     public int UpdatedCount { get; set; }
 
@@ -75,7 +75,7 @@ public class StudentDatasetImportService
         this.database = database;
     }
 
-    // Doğrulanmış CSV kayıtlarını veritabanına aktarma
+    // Doğrulanmış CSV kayıtlarını yalnızca referans tablosuna aktarma
     public async Task<StudentDatasetImportResult> ImportAsync(
         IFormFile? file,
         CancellationToken cancellationToken)
@@ -87,87 +87,46 @@ public class StudentDatasetImportService
             return result;
         }
 
-        List<Student> students = await database.Students.ToListAsync(cancellationToken);
-        List<User> users = await database.Users
-            .AsNoTracking()
+        List<TestStudent> referenceStudents = await database.TestStudents
             .ToListAsync(cancellationToken);
-        HashSet<string> usedUserNames = users
-            .Select(user => user.UserName)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-        HashSet<string> usedEmails = users
-            .Select(user => user.Email)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         foreach (StudentDatasetImportRow record in result.ValidatedRows)
         {
-            // Öğrenciyi numara, kimlik numarası veya e-posta üzerinden bulma
-            List<Student> matches = students
-                .Where(student =>
-                    string.Equals(student.StudentNumber, record.StudentNumber, StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(student.IdentityNumber, record.IdentityNumber, StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(student.Email, record.Email, StringComparison.OrdinalIgnoreCase))
-                .ToList();
+            // Aynı kimlik veya e-posta farklı referans numarasına aitse aktarımı durdurma
+            bool belongsToAnotherReference = referenceStudents.Any(student =>
+                string.Equals(student.StudentNumber, record.StudentNumber, StringComparison.OrdinalIgnoreCase) == false &&
+                (string.Equals(student.IdentityNumber, record.IdentityNumber, StringComparison.OrdinalIgnoreCase) ||
+                 string.Equals(student.Email, record.Email, StringComparison.OrdinalIgnoreCase)));
 
-            if (matches.Count > 1)
+            if (belongsToAnotherReference)
             {
-                result.Errors.Add($"{record.RowNumber}. satir: Ogrenci bilgileri farkli kayitlarla eslesiyor.");
-                continue;
+                result.Errors.Add($"{record.RowNumber}. satir: Kimlik numarasi veya e-posta baska bir referans kaydina ait.");
             }
-
-            Student? student = matches.SingleOrDefault();
-
-            if (student is null)
-            {
-                // Test veri seti için giriş şifresi olmayan bir öğrenci kaydı oluşturma
-                string userName = CreateDatasetUserName(record.StudentNumber);
-
-                if (usedUserNames.Contains(userName))
-                {
-                    result.Errors.Add($"{record.RowNumber}. satir: Test veri seti kullanici adi zaten kullaniliyor.");
-                    continue;
-                }
-
-                if (usedEmails.Contains(record.Email))
-                {
-                    result.Errors.Add($"{record.RowNumber}. satir: E-posta adresi baska bir hesaba ait.");
-                    continue;
-                }
-
-                student = new Student
-                {
-                    UserName = userName,
-                    PasswordHash = "",
-                    Role = "Student"
-                };
-
-                database.Students.Add(student);
-                students.Add(student);
-                usedUserNames.Add(userName);
-                usedEmails.Add(record.Email);
-                result.AddedCount++;
-            }
-            else
-            {
-                // Güncellenecek kaydın e-posta adresinin başka hesaba ait olmadığını kontrol etme
-                bool emailBelongsToAnotherUser = users.Any(user =>
-                    user.Id != student.Id &&
-                    string.Equals(user.Email, record.Email, StringComparison.OrdinalIgnoreCase));
-
-                if (emailBelongsToAnotherUser)
-                {
-                    result.Errors.Add($"{record.RowNumber}. satir: E-posta adresi baska bir hesaba ait.");
-                    continue;
-                }
-
-                result.UpdatedCount++;
-            }
-
-            ApplyRecord(student, record);
         }
 
         if (result.Errors.Count > 0)
         {
             return result;
+        }
+
+        foreach (StudentDatasetImportRow record in result.ValidatedRows)
+        {
+            // Öğrenci numarasına göre yalnızca test referansını ekleme veya güncelleme
+            TestStudent? referenceStudent = referenceStudents.FirstOrDefault(student =>
+                string.Equals(student.StudentNumber, record.StudentNumber, StringComparison.OrdinalIgnoreCase));
+
+            if (referenceStudent is null)
+            {
+                referenceStudent = new TestStudent();
+                database.TestStudents.Add(referenceStudent);
+                result.AddedCount++;
+            }
+            else
+            {
+                result.UpdatedCount++;
+            }
+
+            ApplyRecord(referenceStudent, record);
         }
 
         try
@@ -538,9 +497,9 @@ public class StudentDatasetImportService
         };
     }
 
-    private static void ApplyRecord(Student student, StudentDatasetImportRow record)
+    private static void ApplyRecord(TestStudent student, StudentDatasetImportRow record)
     {
-        // CSV alanlarını öğrenci modeline aktarma
+        // CSV alanlarını test referansı modeline aktarma
         student.FullName = record.FullName;
         student.IdentityNumber = record.IdentityNumber;
         student.Nationality = record.Nationality;
@@ -553,16 +512,6 @@ public class StudentDatasetImportService
         student.Email = record.Email;
         student.PhoneNumber = record.PhoneNumber;
         student.HealthAidStatus = record.HealthAidStatus;
-    }
-
-    private static string CreateDatasetUserName(string studentNumber)
-    {
-        // Test kaydı için öğrenci numarasından benzersiz kullanıcı adı üretme
-        string safeStudentNumber = new string(studentNumber
-            .Where(character => char.IsLetterOrDigit(character))
-            .ToArray());
-
-        return $"dataset_{safeStudentNumber}";
     }
 
     private static string Normalize(string value)

@@ -30,6 +30,9 @@ builder.Services.AddControllersWithViews();
 // Şifre işlemlerini kullanıma hazırlama
 builder.Services.AddScoped<PasswordService>();
 builder.Services.AddScoped<DocumentFileValidator>();
+builder.Services.AddScoped<DocumentReaderService>();
+builder.Services.AddScoped<Ek16FieldExtractor>();
+builder.Services.AddScoped<DocumentFieldComparisonService>();
 builder.Services.AddScoped<StudentDatasetImportService>();
 
 // Oturum bilgilerini sunucu belleğinde tutma

@@ -91,14 +91,23 @@ if (profileForm && profileFormMessage) {
                 }
             });
 
-            const message = await response.text();
+            const responseBody = await response.text();
+            let result = null;
+
+            try {
+                result = responseBody ? JSON.parse(responseBody) : null;
+            } catch {
+                // Doğrulama hataları mevcut akışta düz metin olarak döner.
+            }
 
             if (!response.ok) {
-                profileFormMessage.textContent = message || "Öğrenci bilgileri kaydedilemedi.";
+                profileFormMessage.textContent = result?.message || responseBody || "Öğrenci bilgileri kaydedilemedi.";
                 return;
             }
 
-            profileFormMessage.textContent = message || "Öğrenci bilgileri kaydedildi.";
+            profileFormMessage.textContent = result?.extractionWarning
+                ? `${result.message} ${result.extractionWarning}`
+                : result?.message || responseBody || "Öğrenci bilgileri kaydedildi.";
             profileFormMessage.classList.add("success-message");
             profileForm.querySelector("input[name='file']").value = "";
             await loadSavedProfile();

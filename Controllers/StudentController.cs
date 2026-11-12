@@ -14,6 +14,9 @@ namespace StajYonetimSistemi.Controllers
         private readonly StajDbContext database;
         private readonly IWebHostEnvironment environment;
         private readonly DocumentFileValidator fileValidator;
+        private readonly DocumentReaderService documentReaderService;
+        private readonly Ek16FieldExtractor ek16FieldExtractor;
+        private readonly DocumentFieldComparisonService documentFieldComparisonService;
         private readonly ILogger<StudentController> logger;
 
         private const long MaxFileSize = 10 * 1024 * 1024;
@@ -22,11 +25,17 @@ namespace StajYonetimSistemi.Controllers
             StajDbContext database,
             IWebHostEnvironment environment,
             DocumentFileValidator fileValidator,
+            DocumentReaderService documentReaderService,
+            Ek16FieldExtractor ek16FieldExtractor,
+            DocumentFieldComparisonService documentFieldComparisonService,
             ILogger<StudentController> logger)
         {
             this.database = database;
             this.environment = environment;
             this.fileValidator = fileValidator;
+            this.documentReaderService = documentReaderService;
+            this.ek16FieldExtractor = ek16FieldExtractor;
+            this.documentFieldComparisonService = documentFieldComparisonService;
             this.logger = logger;
         }
 
@@ -313,7 +322,45 @@ namespace StajYonetimSistemi.Controllers
                     "Bilgiler ve dosya kaydedilemedi. Lütfen tekrar deneyin.");
             }
 
-            return Ok("Öğrenci bilgileri ve Ek-16 dosyası birlikte kaydedildi.");
+            string extractedText = "";
+            string? extractionWarning = null;
+            DocumentReadResult? extractedFields = null;
+            List<FieldComparisonResult>? fieldComparisons = null;
+            if (extension is ".docx" or ".pdf")
+            {
+                try
+                {
+                    extractedText = documentReaderService.ReadText(finalPath);
+                    extractedFields = ek16FieldExtractor.Extract(extractedText, document.Id);
+                    database.DocumentReadResults.Add(extractedFields);
+                    await database.SaveChangesAsync(cancellationToken);
+                    fieldComparisons = documentFieldComparisonService.Compare(extractedFields, form);
+
+                    if (string.IsNullOrWhiteSpace(extractedText))
+                        extractionWarning = "Belge kaydedildi ancak okunabilir metin bulunamadı.";
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch (Exception exception)
+                {
+                    // Okuma hatası, başarıyla kaydedilmiş yüklemeyi başarısız göstermesin.
+                    logger.LogWarning(
+                        exception,
+                        "Yüklenen belgeden alanlar çıkarılamadı. Belge kimliği: {DocumentId}",
+                        document.Id);
+                    extractionWarning = "Belge kaydedildi ancak metin alanları çıkarılamadı.";
+                }
+            }
+
+            return Ok(new
+            {
+                message = "Öğrenci bilgileri ve Ek-16 dosyası birlikte kaydedildi.",
+                extractedFields,
+                fieldComparisons,
+                extractionWarning
+            });
         }
 
         private void TryDeleteUploadFile(string path)

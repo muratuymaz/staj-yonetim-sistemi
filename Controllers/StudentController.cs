@@ -140,6 +140,14 @@ namespace StajYonetimSistemi.Controllers
                 comparisons = documentFieldComparisonService.Compare(readResult, savedForm);
             }
 
+            List<FieldComparisonResult>? referenceComparisons = null;
+            if (readResult != null && referenceStudent != null)
+            {
+                referenceComparisons = documentFieldComparisonService.CompareWithReference(
+                    readResult,
+                    referenceStudent);
+            }
+
             return Json(new
             {
                 hasDocument = true,
@@ -148,7 +156,8 @@ namespace StajYonetimSistemi.Controllers
                 document.Status,
                 fieldComparisons = comparisons,
                 referenceLookupStatus,
-                referenceStudentNumber = referenceStudent?.StudentNumber
+                referenceStudentNumber = referenceStudent?.StudentNumber,
+                referenceFieldComparisons = referenceComparisons
             });
         }
 

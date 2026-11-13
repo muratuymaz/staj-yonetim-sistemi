@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.RegularExpressions;
 using StajYonetimSistemi.Models;
 
 namespace StajYonetimSistemi.Services;
@@ -68,7 +69,7 @@ public sealed class DocumentFieldComparisonService
             fieldName,
             documentValue,
             formValue,
-            FieldValueNormalizer.NormalizeText);
+            NormalizeText);
     }
 
     private static FieldComparisonResult CompareDigits(
@@ -80,7 +81,7 @@ public sealed class DocumentFieldComparisonService
             fieldName,
             documentValue,
             formValue,
-            FieldValueNormalizer.NormalizeDigits);
+            NormalizeDigits);
     }
 
     private static FieldComparisonResult CompareNationality(
@@ -92,7 +93,7 @@ public sealed class DocumentFieldComparisonService
             fieldName,
             documentValue,
             referenceValue,
-            FieldValueNormalizer.NormalizeNationality);
+            NormalizeNationality);
     }
 
     private static FieldComparisonResult CompareEmail(
@@ -104,7 +105,7 @@ public sealed class DocumentFieldComparisonService
             fieldName,
             documentValue,
             formValue,
-            FieldValueNormalizer.NormalizeEmail);
+            NormalizeEmail);
     }
 
     private static FieldComparisonResult ComparePhone(
@@ -116,7 +117,7 @@ public sealed class DocumentFieldComparisonService
             fieldName,
             documentValue,
             formValue,
-            FieldValueNormalizer.NormalizePhone);
+            NormalizePhone);
     }
 
     private static FieldComparisonResult CompareDate(
@@ -133,7 +134,7 @@ public sealed class DocumentFieldComparisonService
             fieldName,
             documentText,
             formText,
-            FieldValueNormalizer.NormalizeText);
+            NormalizeText);
     }
 
     private static FieldComparisonResult CompareNumber(
@@ -148,7 +149,7 @@ public sealed class DocumentFieldComparisonService
             fieldName,
             documentText,
             formText,
-            FieldValueNormalizer.NormalizeNumber);
+            NormalizeNumber);
     }
 
     private static FieldComparisonResult CompareValues(
@@ -195,5 +196,66 @@ public sealed class DocumentFieldComparisonService
             FormValue = formValue,
             Status = status
         };
+    }
+    // Karşılaştırma öncesi alan değerlerini düzenleme
+    // Ad ve adres gibi metinlerde boşluk ve harf büyüklüğü farklarını giderir.
+    // Noktalama işaretlerini korur.
+    private static string NormalizeText(string? value)
+    {
+        return Regex.Replace(value ?? "", @"\s+", " ")
+            .Trim()
+            .ToUpperInvariant();
+    }
+
+    // Kimlik numarası biçimindeki boşluk ve ayraçları yok sayar.
+    private static string NormalizeDigits(string? value)
+    {
+        return Regex.Replace(value ?? "", @"\D", "");
+    }
+
+    private static string NormalizeEmail(string? value)
+    {
+        return (value ?? "").Trim().ToUpperInvariant();
+    }
+
+    private static string NormalizeNationality(string? value)
+    {
+        string compact = Regex.Replace(
+            NormalizeText(value),
+            @"[^\p{L}\p{N}]",
+            "");
+
+        return compact switch
+        {
+            "TC" or "TÜRKİYECUMHURİYETİ" => "TC",
+            "FOREIGN" or "YABANCI" or "YABANCIUYRUKLU" => "FOREIGN",
+            _ => compact
+        };
+    }
+
+    // +90 532..., 0532... ve 532... biçimlerini aynı yerel numaraya indirger.
+    private static string NormalizePhone(string? value)
+    {
+        string digits = NormalizeDigits(value);
+
+        if (digits.Length == 12 && digits.StartsWith("90"))
+            return digits[2..];
+
+        if (digits.Length == 11 && digits.StartsWith("0"))
+            return digits[1..];
+
+        return digits;
+    }
+
+    private static string NormalizeNumber(int? value)
+    {
+        return value?.ToString(CultureInfo.InvariantCulture) ?? "";
+    }
+
+    private static string NormalizeNumber(string? value)
+    {
+        return int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int number)
+            ? NormalizeNumber(number)
+            : "";
     }
 }

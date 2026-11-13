@@ -18,7 +18,7 @@ const comparisonLabels = {
     BirthDate: "Doğum tarihi", StudentNumber: "Öğrenci no", Department: "Bölüm",
     Address: "Adres", AcademicYear: "Teslim yılı / yarıyılı",
     PreviousInternshipDays: "Önceki staj günleri", Email: "E-posta",
-    PhoneNumber: "Telefon", InternshipStartDate: "Staj başlangıcı",
+    PhoneNumber: "Telefon", HealthAidStatus: "Sağlık yardımı statüsü", InternshipStartDate: "Staj başlangıcı",
     InternshipEndDate: "Staj bitişi"
 };
 
@@ -49,7 +49,7 @@ async function loadDocumentReport() {
     documentReportSummary.textContent = mismatches === 0
         ? report.status === "Completed"
             ? "Alanlar eşleşiyor ve belge tamamlandı. Öğrenci tarafından değiştirilemez."
-            : "Kontrol edilen alanlar eşleşiyor. Belge teslime hazır; tamamlanması için admin işlemi bekleniyor."
+            : "Kontrol edilen form ve belge bilgileri eşleşiyor. Admin incelemesi bekleniyor."
         : `${mismatches} alanda uyuşmazlık veya okunamayan bilgi var. Düzeltilmiş Ek-16 ile yeniden yükleyin.`;
 
     for (const item of report.fieldComparisons) {

@@ -9,6 +9,7 @@ public class Document
     private DateTime uploadedAt = DateTime.UtcNow;
     private string status = "Uploaded";
 
+    // Kayıt kimliğini tutma
     public int Id
     {
         get
@@ -22,6 +23,7 @@ public class Document
         }
     }
 
+    // Belgenin ait olduğu öğrenci kimliğini tutma
     public int StudentId
     {
         get
@@ -49,6 +51,7 @@ public class Document
         }
     }
 
+    // Dosyanın saklandığı yolu tutma
     public string FilePath
     {
         get
@@ -62,6 +65,7 @@ public class Document
         }
     }
 
+    // Dosyanın yüklenme zamanını tutma
     public DateTime UploadedAt
     {
         get
@@ -94,6 +98,7 @@ public class Document
     private Nullable<DateTime> internshipEndDate;
     private string weeklyWorkDays = "";
 
+    // Staj başlangıç tarihini tutma
     public Nullable<DateTime> InternshipStartDate
     {
         get
@@ -107,6 +112,7 @@ public class Document
         }
     }
 
+    // Staj bitiş tarihini tutma
     public Nullable<DateTime> InternshipEndDate
     {
         get
@@ -120,6 +126,7 @@ public class Document
         }
     }
 
+    // Seçilen haftalık staj günlerini tutma
     public string WeeklyWorkDays
     {
         get

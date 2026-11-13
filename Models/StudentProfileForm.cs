@@ -36,6 +36,7 @@ public class StudentProfileForm
         }
     }
 
+    // Öğrenci numarasını tutma
     [Required]
     public string StudentNumber
     {
@@ -50,6 +51,7 @@ public class StudentProfileForm
         }
     }
 
+    // Ad soyad bilgisini tutma
     [Required]
     public string FullName
     {
@@ -64,6 +66,7 @@ public class StudentProfileForm
         }
     }
 
+    // Kimlik numarasını tutma
     [Required]
     [StringLength(11, MinimumLength = 11)]
     public string IdentityNumber
@@ -79,6 +82,7 @@ public class StudentProfileForm
         }
     }
 
+    // Uyruk bilgisini tutma
     [Required]
     public string Nationality
     {
@@ -93,6 +97,7 @@ public class StudentProfileForm
         }
     }
 
+    // Doğum tarihini tutma
     public DateTime BirthDate
     {
         get
@@ -121,6 +126,7 @@ public class StudentProfileForm
         }
     }
 
+    // Telefon numarasını tutma
     [Required]
     public string PhoneNumber
     {
@@ -150,6 +156,7 @@ public class StudentProfileForm
         }
     }
 
+    // Öğretim yılı ve yarıyıl bilgisini tutma
     [Required]
     public string AcademicYear
     {
@@ -164,6 +171,7 @@ public class StudentProfileForm
         }
     }
 
+    // Önceden yapılan staj gün sayısını tutma
     [Range(0, int.MaxValue)]
     public int PreviousInternshipDays
     {
@@ -192,6 +200,8 @@ public class StudentProfileForm
             healthAidStatus = value;
         }
     }
+
+    // Staj başlangıç tarihini tutma
     public DateTime InternshipStartDate
     {
         get
@@ -205,6 +215,7 @@ public class StudentProfileForm
         }
     }
 
+    // Staj bitiş tarihini tutma
     public DateTime InternshipEndDate
     {
         get
@@ -218,6 +229,7 @@ public class StudentProfileForm
         }
     }
 
+    // Formda seçilen haftalık staj günlerini tutma
     public List<string> InternshipDays
     {
         get

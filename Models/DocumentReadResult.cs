@@ -23,6 +23,7 @@ public class DocumentReadResult
     private Nullable<DateTime> internshipEndDate;
     private Nullable<int> internshipDayCount;
 
+    // Kayıt kimliğini tutma
     public int Id
     {
         get
@@ -36,6 +37,7 @@ public class DocumentReadResult
         }
     }
 
+    // İlgili belgenin kimliğini tutma
     public int DocumentId
     {
         get
@@ -49,6 +51,7 @@ public class DocumentReadResult
         }
     }
 
+    // Belgenin okunma zamanını tutma
     public DateTime ProcessedAt
     {
         get
@@ -62,6 +65,7 @@ public class DocumentReadResult
         }
     }
 
+    // Ad soyad bilgisini tutma
     public string FullName
     {
         get
@@ -75,6 +79,7 @@ public class DocumentReadResult
         }
     }
 
+    // Kimlik numarasını tutma
     public string IdentityNumber
     {
         get
@@ -88,6 +93,7 @@ public class DocumentReadResult
         }
     }
 
+    // Uyruk bilgisini tutma
     public string Nationality
     {
         get
@@ -101,6 +107,7 @@ public class DocumentReadResult
         }
     }
 
+    // Öğrenci numarasını tutma
     public string StudentNumber
     {
         get
@@ -114,6 +121,7 @@ public class DocumentReadResult
         }
     }
 
+    // Doğum tarihini tutma
     public Nullable<DateTime> BirthDate
     {
         get
@@ -127,6 +135,7 @@ public class DocumentReadResult
         }
     }
 
+    // Açık adresi tutma
     public string Address
     {
         get
@@ -140,6 +149,7 @@ public class DocumentReadResult
         }
     }
 
+    // Bölüm bilgisini tutma
     public string Department
     {
         get
@@ -153,6 +163,7 @@ public class DocumentReadResult
         }
     }
 
+    // Öğretim yılı ve yarıyıl bilgisini tutma
     public string AcademicYear
     {
         get
@@ -166,6 +177,7 @@ public class DocumentReadResult
         }
     }
 
+    // Önceden yapılan staj gün sayısını tutma
     public Nullable<int> PreviousInternshipDays
     {
         get
@@ -179,6 +191,7 @@ public class DocumentReadResult
         }
     }
 
+    // E-posta adresini tutma
     public string Email
     {
         get
@@ -192,6 +205,7 @@ public class DocumentReadResult
         }
     }
 
+    // Telefon numarasını tutma
     public string PhoneNumber
     {
         get
@@ -205,6 +219,7 @@ public class DocumentReadResult
         }
     }
 
+    // Sağlık yardımı seçimini tutma
     public Nullable<int> HealthAidStatus
     {
         get
@@ -218,6 +233,7 @@ public class DocumentReadResult
         }
     }
 
+    // Staj başlangıç tarihini tutma
     public Nullable<DateTime> InternshipStartDate
     {
         get
@@ -231,6 +247,7 @@ public class DocumentReadResult
         }
     }
 
+    // Staj bitiş tarihini tutma
     public Nullable<DateTime> InternshipEndDate
     {
         get
@@ -244,6 +261,7 @@ public class DocumentReadResult
         }
     }
 
+    // Belgedeki toplam staj gün sayısını tutma
     public Nullable<int> InternshipDayCount
     {
         get

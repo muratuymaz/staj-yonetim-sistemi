@@ -11,24 +11,111 @@ namespace StajYonetimSistemi.Services;
 // CSV aktarımı sırasında oluşan sonuç ve hata bilgilerini tutma
 public class StudentDatasetImportResult
 {
+    private string csvText = "";
+    private List<string> headers = new List<string>();
+    private List<List<string>> rows = new List<List<string>>();
+    private List<StudentDatasetImportRow> validatedRows = new List<StudentDatasetImportRow>();
+    private int addedCount;
+    private int updatedCount;
+    private List<string> errors = new List<string>();
+
     // Dosyanın okunmuş ham metnini tutma
-    public string CsvText { get; set; } = "";
+    public string CsvText
+    {
+        get
+        {
+            return csvText;
+        }
+
+        set
+        {
+            csvText = value;
+        }
+    }
 
     // CSV başlıklarını tutma
-    public List<string> Headers { get; set; } = new List<string>();
+    public List<string> Headers
+    {
+        get
+        {
+            return headers;
+        }
+
+        set
+        {
+            headers = value;
+        }
+    }
 
     // CSV içindeki ham satırları tutma
-    public List<List<string>> Rows { get; set; } = new List<List<string>>();
+    public List<List<string>> Rows
+    {
+        get
+        {
+            return rows;
+        }
+
+        set
+        {
+            rows = value;
+        }
+    }
 
     // Doğrulaması tamamlanmış öğrenci kayıtlarını tutma
-    public List<StudentDatasetImportRow> ValidatedRows { get; set; } = new List<StudentDatasetImportRow>();
+    public List<StudentDatasetImportRow> ValidatedRows
+    {
+        get
+        {
+            return validatedRows;
+        }
+
+        set
+        {
+            validatedRows = value;
+        }
+    }
 
     // Referans tablosuna eklenen ve güncellenen kayıt sayılarını tutma
-    public int AddedCount { get; set; }
-    public int UpdatedCount { get; set; }
+    public int AddedCount
+    {
+        get
+        {
+            return addedCount;
+        }
+
+        set
+        {
+            addedCount = value;
+        }
+    }
+
+    // Güncellenen referans kayıt sayısını tutma
+    public int UpdatedCount
+    {
+        get
+        {
+            return updatedCount;
+        }
+
+        set
+        {
+            updatedCount = value;
+        }
+    }
 
     // Kullanıcıya gösterilecek hata mesajlarını tutma
-    public List<string> Errors { get; set; } = new List<string>();
+    public List<string> Errors
+    {
+        get
+        {
+            return errors;
+        }
+
+        set
+        {
+            errors = value;
+        }
+    }
 
     // Aktarım için geçerli kayıt bulunup bulunmadığını kontrol etme
     public bool IsSuccess
@@ -43,24 +130,201 @@ public class StudentDatasetImportResult
 // CSV içindeki tek bir öğrenci kaydını doğrulanmış alanlarla tutma
 public class StudentDatasetImportRow
 {
+    private int rowNumber;
+    private string fullName = "";
+    private string identityNumber = "";
+    private string nationality = "";
+    private string studentNumber = "";
+    private DateTime birthDate;
+    private string address = "";
+    private string department = "";
+    private string academicYear = "";
+    private int previousInternshipDays;
+    private string email = "";
+    private string phoneNumber = "";
+    private int healthAidStatus;
+
     // CSV satır numarasını tutma
-    public int RowNumber { get; set; }
+    public int RowNumber
+    {
+        get
+        {
+            return rowNumber;
+        }
+
+        set
+        {
+            rowNumber = value;
+        }
+    }
 
     // Öğrenci kimlik ve iletişim bilgilerini tutma
-    public string FullName { get; set; } = "";
-    public string IdentityNumber { get; set; } = "";
-    public string Nationality { get; set; } = "";
-    public string StudentNumber { get; set; } = "";
-    public DateTime BirthDate { get; set; }
-    public string Address { get; set; } = "";
-    public string Department { get; set; } = "";
-    public string AcademicYear { get; set; } = "";
-    public int PreviousInternshipDays { get; set; }
-    public string Email { get; set; } = "";
-    public string PhoneNumber { get; set; } = "";
+    public string FullName
+    {
+        get
+        {
+            return fullName;
+        }
+
+        set
+        {
+            fullName = value;
+        }
+    }
+
+    // Kimlik numarasını tutma
+    public string IdentityNumber
+    {
+        get
+        {
+            return identityNumber;
+        }
+
+        set
+        {
+            identityNumber = value;
+        }
+    }
+
+    // Uyruk bilgisini tutma
+    public string Nationality
+    {
+        get
+        {
+            return nationality;
+        }
+
+        set
+        {
+            nationality = value;
+        }
+    }
+
+    // Öğrenci numarasını tutma
+    public string StudentNumber
+    {
+        get
+        {
+            return studentNumber;
+        }
+
+        set
+        {
+            studentNumber = value;
+        }
+    }
+
+    // Doğum tarihini tutma
+    public DateTime BirthDate
+    {
+        get
+        {
+            return birthDate;
+        }
+
+        set
+        {
+            birthDate = value;
+        }
+    }
+
+    // Açık adresi tutma
+    public string Address
+    {
+        get
+        {
+            return address;
+        }
+
+        set
+        {
+            address = value;
+        }
+    }
+
+    // Bölüm bilgisini tutma
+    public string Department
+    {
+        get
+        {
+            return department;
+        }
+
+        set
+        {
+            department = value;
+        }
+    }
+
+    // Öğretim yılı bilgisini tutma
+    public string AcademicYear
+    {
+        get
+        {
+            return academicYear;
+        }
+
+        set
+        {
+            academicYear = value;
+        }
+    }
+
+    // Önceden yapılan staj gün sayısını tutma
+    public int PreviousInternshipDays
+    {
+        get
+        {
+            return previousInternshipDays;
+        }
+
+        set
+        {
+            previousInternshipDays = value;
+        }
+    }
+
+    // E-posta adresini tutma
+    public string Email
+    {
+        get
+        {
+            return email;
+        }
+
+        set
+        {
+            email = value;
+        }
+    }
+
+    // Telefon numarasını tutma
+    public string PhoneNumber
+    {
+        get
+        {
+            return phoneNumber;
+        }
+
+        set
+        {
+            phoneNumber = value;
+        }
+    }
 
     // Sağlık yardımı statüsünü sayısal değer olarak tutma
-    public int HealthAidStatus { get; set; }
+    public int HealthAidStatus
+    {
+        get
+        {
+            return healthAidStatus;
+        }
+
+        set
+        {
+            healthAidStatus = value;
+        }
+    }
 }
 
 public class StudentDatasetImportService

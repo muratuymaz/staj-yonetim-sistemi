@@ -10,6 +10,7 @@ public class User
     private int failedLoginCount;
     private bool isLocked;
 
+    // Kayıt kimliğini tutma
     public int Id
     {
         get
@@ -37,6 +38,7 @@ public class User
         }
     }
 
+    // E-posta adresini tutma
     public string Email
     {
         get
@@ -50,6 +52,7 @@ public class User
         }
     }
 
+    // Şifrenin hash değerini tutma
     public string PasswordHash
     {
         get

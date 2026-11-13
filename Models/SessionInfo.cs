@@ -6,6 +6,7 @@ namespace StajYonetimSistemi.Models
         private int userId;
         private string role = "";
 
+        // Kullanıcı kimliğini tutma
         public int UserId
         {
             get
@@ -19,6 +20,7 @@ namespace StajYonetimSistemi.Models
             }
         }
 
+        // Kullanıcı rolünü tutma
         public string Role
         {
             get

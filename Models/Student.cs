@@ -29,6 +29,7 @@ public class Student : User
         }
     }
 
+    // Ad soyad bilgisini tutma
     public string FullName
     {
         get
@@ -42,6 +43,7 @@ public class Student : User
         }
     }
 
+    // Kimlik numarasını tutma
     public string IdentityNumber
     {
         get
@@ -55,6 +57,7 @@ public class Student : User
         }
     }
 
+    // Uyruk bilgisini tutma
     public string Nationality
     {
         get
@@ -68,6 +71,7 @@ public class Student : User
         }
     }
 
+    // Doğum tarihini tutma
     public DateTime BirthDate
     {
         get
@@ -95,6 +99,7 @@ public class Student : User
         }
     }
 
+    // Telefon numarasını tutma
     public string PhoneNumber
     {
         get
@@ -122,6 +127,7 @@ public class Student : User
         }
     }
 
+    // Öğretim yılı ve yarıyıl bilgisini tutma
     public string AcademicYear
     {
         get
@@ -135,6 +141,7 @@ public class Student : User
         }
     }
 
+    // Önceden yapılan staj gün sayısını tutma
     public int PreviousInternshipDays
     {
         get

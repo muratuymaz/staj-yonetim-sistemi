@@ -8,6 +8,7 @@ public class LoginAttempt
     private DateTime attemptedAt = DateTime.UtcNow;
     private string failureReason = "";
 
+    // Kayıt kimliğini tutma
     public int Id
     {
         get
@@ -49,6 +50,7 @@ public class LoginAttempt
         }
     }
 
+    // Giriş denemesinin zamanını tutma
     public DateTime AttemptedAt
     {
         get
@@ -62,6 +64,7 @@ public class LoginAttempt
         }
     }
 
+    // Başarısız giriş nedenini tutma
     public string FailureReason
     {
         get

@@ -1,5 +1,6 @@
 namespace StajYonetimSistemi.Models;
 
+// Karşılaştırma sonuçlarında kullanılan durumları tanımlama
 public static class FieldComparisonStatus
 {
     public const string Match = "match";
@@ -8,13 +9,67 @@ public static class FieldComparisonStatus
     public const string FormValueMissing = "formValueMissing";
 }
 
+// Tek bir alanın karşılaştırma sonucunu tutma
 public sealed class FieldComparisonResult
 {
-    public string FieldName { get; init; } = "";
+    private string fieldName = "";
+    private string? documentValue;
+    private string? formValue;
+    private string status = FieldComparisonStatus.Unreadable;
 
-    public string? DocumentValue { get; init; }
+    // Karşılaştırılan alanın adını tutma
+    public string FieldName
+    {
+        get
+        {
+            return fieldName;
+        }
 
-    public string? FormValue { get; init; }
+        init
+        {
+            fieldName = value;
+        }
+    }
 
-    public string Status { get; init; } = FieldComparisonStatus.Unreadable;
+    // Belgeden okunan değeri tutma
+    public string? DocumentValue
+    {
+        get
+        {
+            return documentValue;
+        }
+
+        init
+        {
+            documentValue = value;
+        }
+    }
+
+    // Karşılaştırılacak form veya referans değerini tutma
+    public string? FormValue
+    {
+        get
+        {
+            return formValue;
+        }
+
+        init
+        {
+            formValue = value;
+        }
+    }
+
+    // Durum bilgisini tutma
+    public string Status
+    {
+        get
+        {
+            return status;
+        }
+
+        init
+        {
+            status = value;
+        }
+    }
 }

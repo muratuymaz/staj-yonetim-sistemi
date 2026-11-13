@@ -17,6 +17,7 @@ public class TestStudent
     private string phoneNumber = "";
     private int healthAidStatus;
 
+    // Kayıt kimliğini tutma
     public int Id
     {
         get
@@ -30,6 +31,7 @@ public class TestStudent
         }
     }
 
+    // Ad soyad bilgisini tutma
     public string FullName
     {
         get
@@ -43,6 +45,7 @@ public class TestStudent
         }
     }
 
+    // Kimlik numarasını tutma
     public string IdentityNumber
     {
         get
@@ -56,6 +59,7 @@ public class TestStudent
         }
     }
 
+    // Uyruk bilgisini tutma
     public string Nationality
     {
         get
@@ -69,6 +73,7 @@ public class TestStudent
         }
     }
 
+    // Öğrenci numarasını tutma
     public string StudentNumber
     {
         get
@@ -82,6 +87,7 @@ public class TestStudent
         }
     }
 
+    // Doğum tarihini tutma
     public DateTime BirthDate
     {
         get
@@ -95,6 +101,7 @@ public class TestStudent
         }
     }
 
+    // Açık adresi tutma
     public string Address
     {
         get
@@ -108,6 +115,7 @@ public class TestStudent
         }
     }
 
+    // Bölüm bilgisini tutma
     public string Department
     {
         get
@@ -121,6 +129,7 @@ public class TestStudent
         }
     }
 
+    // Öğretim yılı ve yarıyıl bilgisini tutma
     public string AcademicYear
     {
         get
@@ -134,6 +143,7 @@ public class TestStudent
         }
     }
 
+    // Önceden yapılan staj gün sayısını tutma
     public int PreviousInternshipDays
     {
         get
@@ -147,6 +157,7 @@ public class TestStudent
         }
     }
 
+    // E-posta adresini tutma
     public string Email
     {
         get
@@ -160,6 +171,7 @@ public class TestStudent
         }
     }
 
+    // Telefon numarasını tutma
     public string PhoneNumber
     {
         get
@@ -173,6 +185,7 @@ public class TestStudent
         }
     }
 
+    // Sağlık yardımı seçimini tutma
     public int HealthAidStatus
     {
         get

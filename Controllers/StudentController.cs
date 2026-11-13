@@ -109,6 +109,30 @@ namespace StajYonetimSistemi.Controllers
                 .AsNoTracking()
                 .FirstOrDefaultAsync(item => item.DocumentId == document.Id, cancellationToken);
 
+            string? extractedStudentNumber = string.IsNullOrWhiteSpace(readResult?.StudentNumber)
+                ? null
+                : readResult.StudentNumber.Trim();
+
+            TestStudent? referenceStudent = null;
+            string referenceLookupStatus;
+
+            if (extractedStudentNumber is null)
+            {
+                referenceLookupStatus = "studentNumberUnreadable";
+            }
+            else
+            {
+                referenceStudent = await database.TestStudents
+                    .AsNoTracking()
+                    .SingleOrDefaultAsync(
+                        item => item.StudentNumber == extractedStudentNumber,
+                        cancellationToken);
+
+                referenceLookupStatus = referenceStudent is null
+                    ? "notFound"
+                    : "found";
+            }
+
             List<FieldComparisonResult>? comparisons = null;
             if (readResult != null)
             {
@@ -122,7 +146,9 @@ namespace StajYonetimSistemi.Controllers
                 document.OriginalFileName,
                 document.UploadedAt,
                 document.Status,
-                fieldComparisons = comparisons
+                fieldComparisons = comparisons,
+                referenceLookupStatus,
+                referenceStudentNumber = referenceStudent?.StudentNumber
             });
         }
 

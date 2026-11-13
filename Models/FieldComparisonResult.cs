@@ -31,7 +31,7 @@ public sealed class FieldComparisonResult
         }
     }
 
-    // Belgeden okunan değeri tutma
+    // İlk kaynaktaki değeri tutma
     public string? DocumentValue
     {
         get
@@ -45,7 +45,7 @@ public sealed class FieldComparisonResult
         }
     }
 
-    // Karşılaştırılacak form veya referans değerini tutma
+    // Karşılaştırılacak ikinci kaynaktaki değeri tutma
     public string? FormValue
     {
         get

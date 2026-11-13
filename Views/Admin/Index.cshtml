@@ -10,7 +10,6 @@
         <div>
             <p class="eyebrow">STAJ YÖNETİM SİSTEMİ</p>
             <h1>Admin Paneli</h1>
-            <p class="description">CSV referans verilerini ve öğrenci hesaplarını ayrı görüntüleyin.</p>
         </div>
 
         <form id="logoutForm" asp-controller="Account" asp-action="Logout" method="post">
@@ -22,11 +21,8 @@
     <section class="admin-card">
         <div class="admin-card-heading">
             <div>
-                <p class="section-kicker">VİZE KAPSAMI</p>
                 <h2>Test veri seti</h2>
-                <p class="description">CSV dosyasını önizleyip ayrı referans veri olarak kaydedin. Bu işlem öğrenci hesabı oluşturmaz veya kayıtlı öğrenci profilini değiştirmez.</p>
             </div>
-            <span class="draft-badge">Aktif</span>
         </div>
 
         @if (TempData["DatasetMessage"] is string datasetMessage)
@@ -47,7 +43,6 @@
             <label class="file-dropzone" for="datasetFile">
                 <span class="file-dropzone-icon">↑</span>
                 <span class="file-dropzone-title">CSV dosyası seçin</span>
-                <span class="file-dropzone-note">Öğrenci bilgilerini içeren .csv dosyası</span>
                 <input id="datasetFile" name="datasetFile" type="file" accept=".csv,text/csv" required />
             </label>
 
@@ -73,7 +68,7 @@
         <div class="dataset-preview">
             <div class="preview-heading">
                 <h3>Kaydedilen referans öğrenciler</h3>
-                <span class="student-count-badge">@Model.TestStudents.Count kayıt</span>
+                <span id="referenceCount" class="student-count-badge">@Model.TestStudents.Count kayıt</span>
             </div>
 
             @if (Model.TestStudents.Count == 0)
@@ -82,28 +77,50 @@
             }
             else
             {
-                <div class="table-wrapper">
-                    <table class="admin-table">
+                <div class="table-wrapper reference-table-wrapper" role="region" aria-label="Referans öğrenci kayıtları" tabindex="0">
+                    <table class="admin-table reference-table">
                         <thead>
                             <tr>
                                 <th>Ad soyad</th>
-                                <th>Öğrenci no</th>
+                                <th>
+                                    <label for="referenceNumberSearch" class="table-search-label">Öğrenci no</label>
+                                    <input id="referenceNumberSearch" class="table-search-input" type="search"
+                                           inputmode="numeric" placeholder="Öğrenci no girin"
+                                           aria-label="Öğrenci numarası ara" />
+                                </th>
+                                <th>TC kimlik no</th>
+                                <th>Uyruk</th>
+                                <th>Doğum tarihi</th>
+                                <th>İkametgâh adresi</th>
                                 <th>Bölüm</th>
-                                <th>Öğretim yılı</th>
+                                <th>Ek-16 teslim yılı</th>
+                                <th>Önceki staj günleri</th>
                                 <th>E-posta</th>
+                                <th>Telefon no</th>
+                                <th>Sağlık yardımı statüsü</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach (var reference in Model.TestStudents)
                             {
-                                <tr>
+                                <tr data-student-number="@reference.StudentNumber">
                                     <td>@reference.FullName</td>
                                     <td>@reference.StudentNumber</td>
+                                    <td>@reference.IdentityNumber</td>
+                                    <td>@reference.Nationality</td>
+                                    <td>@reference.BirthDate.ToString("dd.MM.yyyy")</td>
+                                    <td class="reference-address">@reference.Address</td>
                                     <td>@reference.Department</td>
                                     <td>@reference.AcademicYear</td>
+                                    <td>@reference.PreviousInternshipDays</td>
                                     <td>@reference.Email</td>
+                                    <td>@reference.PhoneNumber</td>
+                                    <td>@reference.HealthAidStatus</td>
                                 </tr>
                             }
+                            <tr id="referenceSearchEmpty" hidden>
+                                <td colspan="12">Bu öğrenci numarasıyla eşleşen kayıt bulunamadı.</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -114,19 +131,22 @@
     <section class="admin-card">
         <div class="admin-card-heading">
             <div>
-                <p class="section-kicker">ÖĞRENCİ KAYITLARI</p>
                 <h2>Kayıtlı öğrenciler</h2>
-                <p class="description">Yeni CSV yüklemeleri bu listeye öğrenci hesabı eklemez.</p>
             </div>
-            <span class="student-count-badge">@Model.Students.Count öğrenci</span>
+            <span id="registeredCount" class="student-count-badge">@Model.Students.Count öğrenci</span>
         </div>
 
-        <div class="table-wrapper">
-            <table class="admin-table student-table">
+        <div class="table-wrapper registered-table-wrapper" role="region" aria-label="Kayıtlı öğrenci hesapları" tabindex="0">
+            <table class="admin-table student-table registered-table">
                 <thead>
                     <tr>
                         <th>Ad soyad</th>
-                        <th>Öğrenci no</th>
+                        <th>
+                            <label for="registeredNumberSearch" class="table-search-label">Öğrenci no</label>
+                            <input id="registeredNumberSearch" class="table-search-input" type="search"
+                                   inputmode="numeric" placeholder="Öğrenci no girin"
+                                   aria-label="Kayıtlı öğrenci numarası ara" />
+                        </th>
                         <th>Uyruk</th>
                         <th>Bölüm</th>
                         <th>E-posta</th>
@@ -137,7 +157,9 @@
                 <tbody>
                     @foreach (var student in Model.Students)
                     {
-                        <tr>
+                        <tr class="registered-student-row" data-student-id="@student.Id"
+                            data-student-number="@student.StudentNumber" tabindex="0"
+                            aria-label="@student.FullName öğrenci kaydını aç">
                             <td><strong>@student.FullName</strong><small>@student.UserName</small></td>
                             <td>@(string.IsNullOrWhiteSpace(student.StudentNumber) ? "-" : student.StudentNumber)</td>
                             <td>@(string.IsNullOrWhiteSpace(student.Nationality) ? "-" : student.Nationality)</td>
@@ -146,24 +168,99 @@
                             <td>@(string.IsNullOrWhiteSpace(student.PhoneNumber) ? "-" : student.PhoneNumber)</td>
                             <td>
                                 <span class="status-pill status-@student.DocumentStatusKey">@student.DocumentStatus</span>
-                                @if (student.DocumentStatusKey == "approved" && student.DocumentId.HasValue)
-                                {
-                                    <form asp-controller="Admin" asp-action="CompleteDocument" method="post">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="documentId" value="@student.DocumentId" />
-                                        <button class="secondary-button" type="submit">Tamamlandı olarak işaretle</button>
-                                    </form>
-                                }
                             </td>
                         </tr>
                     }
+                    <tr id="registeredSearchEmpty" hidden>
+                        <td colspan="7">Bu öğrenci numarasıyla eşleşen kayıt bulunamadı.</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
+    </section>
+
+    <section id="adminStudentDetails" class="admin-card" hidden>
+        <div class="admin-card-heading">
+            <div>
+                <h2 id="detailStudentName">Öğrenci bilgileri</h2>
+                <p id="detailDocumentStatus" class="description"></p>
+            </div>
+            <button id="closeStudentDetails" class="secondary-button" type="button">Kapat</button>
+        </div>
+
+        <p id="detailMessage" class="form-message" role="status"></p>
+
+        <div class="dataset-preview">
+            <h3>Kayıtlı öğrenci ve CSV referansı</h3>
+            <div class="table-wrapper">
+                <table class="admin-table">
+                    <thead><tr><th>Alan</th><th>Kayıtlı değer</th><th>CSV referansı</th><th>Sonuç</th></tr></thead>
+                    <tbody id="referenceComparisonRows"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="dataset-preview">
+            <h3>Ek-16 belgesi ve öğrenci formu</h3>
+            <div class="table-wrapper">
+                <table class="admin-table">
+                    <thead><tr><th>Alan</th><th>Belgedeki değer</th><th>Formdaki değer</th><th>Sonuç</th></tr></thead>
+                    <tbody id="documentComparisonRows"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <form id="adminStudentForm" asp-controller="Admin" asp-action="SaveStudent" method="post">
+            @Html.AntiForgeryToken()
+            <input id="adminStudentId" name="studentId" type="hidden" />
+            <div class="form-section">
+                <h3>Kayıtlı öğrenci bilgilerini düzenle</h3>
+                <div class="form-grid two-columns">
+                    <div class="form-group"><label for="adminFullName">Ad soyad</label><input id="adminFullName" name="FullName" required /></div>
+                    <div class="form-group"><label for="adminStudentNumber">Öğrenci no</label><input id="adminStudentNumber" name="StudentNumber" required /></div>
+                    <div class="form-group"><label for="adminIdentityNumber">Kimlik no</label><input id="adminIdentityNumber" name="IdentityNumber" minlength="11" maxlength="11" required /></div>
+                    <div class="form-group"><label for="adminNationality">Uyruk</label><select id="adminNationality" name="Nationality" required><option value="TC">T.C.</option><option value="Foreign">Yabancı uyruklu</option></select></div>
+                    <div class="form-group"><label for="adminBirthDate">Doğum tarihi</label><input id="adminBirthDate" name="BirthDate" type="date" required /></div>
+                    <div class="form-group"><label for="adminDepartment">Bölüm</label><input id="adminDepartment" name="Department" required /></div>
+                    <div class="form-group full-width"><label for="adminAddress">İkametgâh adresi</label><textarea id="adminAddress" name="Address" rows="2" required></textarea></div>
+                    <div class="form-group"><label for="adminAcademicYear">Ek-16 teslim yılı / yarıyılı</label><input id="adminAcademicYear" name="AcademicYear" required /></div>
+                    <div class="form-group"><label for="adminPreviousDays">Önceki staj günleri</label><input id="adminPreviousDays" name="PreviousInternshipDays" type="number" min="0" required /></div>
+                    <div class="form-group"><label for="adminEmail">E-posta</label><input id="adminEmail" name="Email" type="email" required /></div>
+                    <div class="form-group"><label for="adminPhone">Telefon</label><input id="adminPhone" name="PhoneNumber" required /></div>
+                    <div class="form-group"><label for="adminHealthAid">Sağlık yardımı statüsü</label>
+                        <select id="adminHealthAid" name="HealthAidStatus" required>
+                            <option value="1">1 - Genel Sağlık Sigortası</option>
+                            <option value="2">2 - Anne-Baba üzerinden</option>
+                            <option value="3">3 - Sosyal Sigortalar Kurumu</option>
+                            <option value="4">4 - Bağ-Kur</option>
+                            <option value="5">5 - Emekli Sandığı</option>
+                            <option value="6">6 - Sağlık yardımı alamıyorum</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label for="adminInternshipStart">Staj başlangıcı</label><input id="adminInternshipStart" name="InternshipStartDate" type="date" /></div>
+                    <div class="form-group"><label for="adminInternshipEnd">Staj bitişi</label><input id="adminInternshipEnd" name="InternshipEndDate" type="date" /></div>
+                    <fieldset class="form-group full-width weekday-group">
+                        <legend>Haftalık staj günleri</legend>
+                        <div class="weekday-options">
+                            <label><input name="InternshipDays" type="checkbox" value="monday" /> Pazartesi</label>
+                            <label><input name="InternshipDays" type="checkbox" value="tuesday" /> Salı</label>
+                            <label><input name="InternshipDays" type="checkbox" value="wednesday" /> Çarşamba</label>
+                            <label><input name="InternshipDays" type="checkbox" value="thursday" /> Perşembe</label>
+                            <label><input name="InternshipDays" type="checkbox" value="friday" /> Cuma</label>
+                        </div>
+                    </fieldset>
+                </div>
+            </div>
+            <div class="admin-detail-actions">
+                <button id="saveAdminStudent" class="primary-button" type="submit">Bilgileri kaydet</button>
+                <button id="completeAdminDocument" class="secondary-button" type="button">Tamamlandı olarak işaretle</button>
+                <button id="deleteAdminStudent" class="secondary-button danger-button" type="button">Öğrenci kaydını sil</button>
+            </div>
+        </form>
     </section>
 </div>
 
 @section Scripts {
     <script src="~/js/logout.js"></script>
-    <script src="~/js/admin.js?v=1"></script>
+    <script src="~/js/admin.js?v=6"></script>
 }

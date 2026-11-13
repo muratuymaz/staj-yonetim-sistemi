@@ -60,6 +60,32 @@ public sealed class DocumentFieldComparisonService
         ];
     }
 
+    // Kaydedilen öğrenci profili ile CSV referansındaki alanları karşılaştırma
+    public List<FieldComparisonResult> CompareStudentWithReference(
+        Student student,
+        TestStudent reference)
+    {
+        ArgumentNullException.ThrowIfNull(student);
+        ArgumentNullException.ThrowIfNull(reference);
+
+        return
+        [
+            CompareText("FullName", student.FullName, reference.FullName),
+            CompareDigits("IdentityNumber", student.IdentityNumber, reference.IdentityNumber),
+            CompareNationality("Nationality", student.Nationality, reference.Nationality),
+            CompareDate("BirthDate", student.BirthDate, reference.BirthDate),
+            CompareText("StudentNumber", student.StudentNumber, reference.StudentNumber),
+            CompareText("Address", student.Address, reference.Address),
+            CompareText("Department", student.Department, reference.Department),
+            CompareText("AcademicYear", student.AcademicYear, reference.AcademicYear),
+            CompareNumber("PreviousInternshipDays",
+                student.PreviousInternshipDays, reference.PreviousInternshipDays),
+            CompareEmail("Email", student.Email, reference.Email),
+            ComparePhone("PhoneNumber", student.PhoneNumber, reference.PhoneNumber),
+            CompareNumber("HealthAidStatus", student.HealthAidStatus, reference.HealthAidStatus)
+        ];
+    }
+
     private static FieldComparisonResult CompareText(
         string fieldName,
         string? documentValue,

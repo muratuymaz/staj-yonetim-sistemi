@@ -698,7 +698,10 @@ public class StudentDatasetImportService
         int healthAidStatus = ParseHealthAidStatus(healthAidStatusText);
         if (healthAidStatus < 0)
         {
-            rowErrors.Add("saglik yardimi statusu 1-6 arasinda olmalidir");
+            string shownValue = healthAidStatusText.Length > 40
+                ? healthAidStatusText[..40] + "..."
+                : healthAidStatusText;
+            rowErrors.Add($"saglik yardimi statusu '{shownValue}' gecersiz; 1-6 arasinda olmalidir");
         }
 
         if (rowErrors.Count > 0)

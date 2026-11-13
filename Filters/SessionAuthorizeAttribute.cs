@@ -65,7 +65,13 @@ namespace StajYonetimSistemi.Filters
 
             if (user.Role != requiredRole)
             {
-                RedirectToLogin(context);
+                // Giriş yapılmış ancak rol uygun değilse 403 döndürme
+                context.Result = new ContentResult
+                {
+                    StatusCode = 403,
+                    Content = "Bu sayfaya erişim yetkiniz yok.",
+                    ContentType = "text/plain; charset=utf-8"
+                };
             }
         }
 

@@ -85,7 +85,7 @@ public class User
             return failedLoginCount;
         }
 
-        set
+        private set
         {
             failedLoginCount = value;
         }
@@ -99,7 +99,7 @@ public class User
             return isLocked;
         }
 
-        set
+        private set
         {
             isLocked = value;
         }
@@ -114,5 +114,27 @@ public class User
         Role = "Student";
         FailedLoginCount = 0;
         IsLocked = false;
+    }
+
+    // Hatalı giriş sayısını artırma ve beş denemede hesabı kilitleme
+    public void RegisterFailedLogin()
+    {
+        if (IsLocked == true)
+        {
+            return;
+        }
+
+        FailedLoginCount = FailedLoginCount + 1;
+
+        if (FailedLoginCount >= 5)
+        {
+            IsLocked = true;
+        }
+    }
+
+    // Başarılı girişte hatalı giriş sayısını sıfırlama
+    public void ResetFailedLoginCount()
+    {
+        FailedLoginCount = 0;
     }
 }

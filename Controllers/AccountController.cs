@@ -154,14 +154,8 @@ namespace StajYonetimSistemi.Controllers
 
             if (passwordIsCorrect == false)
             {
-                // Hatalı giriş sayısını artırma
-                user.FailedLoginCount = user.FailedLoginCount + 1;
-
-                // Beş hatalı denemede hesabı kilitleme
-                if (user.FailedLoginCount >= 5)
-                {
-                    user.IsLocked = true;
-                }
+                // Hatalı giriş ve kilitleme işlemini kullanıcıya yaptırma
+                user.RegisterFailedLogin();
 
                 RecordFailedLogin(userName, user.Id, "Şifre hatalı.");
 
@@ -174,7 +168,7 @@ namespace StajYonetimSistemi.Controllers
             }
 
             // Sayacı sıfırlama ve değişiklikleri kaydetme
-            user.FailedLoginCount = 0;
+            user.ResetFailedLoginCount();
             database.SaveChanges();
 
             // Kullanıcı kimliğini ve rolünü oturuma kaydetme

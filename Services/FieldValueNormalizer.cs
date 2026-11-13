@@ -25,6 +25,21 @@ public static class FieldValueNormalizer
         return (value ?? "").Trim().ToUpperInvariant();
     }
 
+    public static string NormalizeNationality(string? value)
+    {
+        string compact = Regex.Replace(
+            NormalizeText(value),
+            @"[^\p{L}\p{N}]",
+            "");
+
+        return compact switch
+        {
+            "TC" or "TÜRKİYECUMHURİYETİ" => "TC",
+            "FOREIGN" or "YABANCI" or "YABANCIUYRUKLU" => "FOREIGN",
+            _ => compact
+        };
+    }
+
     // +90 532..., 0532... ve 532... biçimlerini aynı yerel numaraya indirger.
     public static string NormalizePhone(string? value)
     {

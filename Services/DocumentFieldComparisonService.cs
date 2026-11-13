@@ -33,6 +33,32 @@ public sealed class DocumentFieldComparisonService
         ];
     }
 
+    public List<FieldComparisonResult> CompareWithReference(
+        DocumentReadResult document,
+        TestStudent reference)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(reference);
+
+        return
+        [
+            CompareText("FullName", document.FullName, reference.FullName),
+            CompareDigits("IdentityNumber", document.IdentityNumber, reference.IdentityNumber),
+            CompareNationality("Nationality", document.Nationality, reference.Nationality),
+            CompareDate("BirthDate", document.BirthDate, reference.BirthDate),
+            CompareText("StudentNumber", document.StudentNumber, reference.StudentNumber),
+            CompareText("Address", document.Address, reference.Address),
+            CompareText("Department", document.Department, reference.Department),
+            CompareText("AcademicYear", document.AcademicYear, reference.AcademicYear),
+            CompareNumber(
+                "PreviousInternshipDays",
+                document.PreviousInternshipDays,
+                reference.PreviousInternshipDays),
+            CompareEmail("Email", document.Email, reference.Email),
+            ComparePhone("PhoneNumber", document.PhoneNumber, reference.PhoneNumber)
+        ];
+    }
+
     private static FieldComparisonResult CompareText(
         string fieldName,
         string? documentValue,
@@ -55,6 +81,18 @@ public sealed class DocumentFieldComparisonService
             documentValue,
             formValue,
             FieldValueNormalizer.NormalizeDigits);
+    }
+
+    private static FieldComparisonResult CompareNationality(
+        string fieldName,
+        string? documentValue,
+        string? referenceValue)
+    {
+        return CompareValues(
+            fieldName,
+            documentValue,
+            referenceValue,
+            FieldValueNormalizer.NormalizeNationality);
     }
 
     private static FieldComparisonResult CompareEmail(

@@ -133,7 +133,7 @@ if (profileForm && profileFormMessage) {
         // Eski genel sağlık durumları yerine Ek-16'daki maddeyi seçtirme
         const healthAidStatus = profileForm.querySelector("[name='HealthAidStatus']");
 
-        if (Number(healthAidStatus.value) < 3) {
+        if (Number(healthAidStatus.value) < 1 || Number(healthAidStatus.value) > 6) {
             profileFormMessage.textContent = "Ek-16'daki altı sağlık yardımı maddesinden birini seçin.";
             healthAidStatus.focus();
             return;

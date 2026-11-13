@@ -185,7 +185,7 @@ public class TestStudent
         }
     }
 
-    // Sağlık yardımı seçimini tutma
+    // Ek-16 üzerindeki 1-6 arasındaki sağlık yardımı maddesini tutma
     public int HealthAidStatus
     {
         get

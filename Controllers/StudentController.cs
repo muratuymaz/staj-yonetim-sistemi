@@ -170,7 +170,7 @@ namespace StajYonetimSistemi.Controllers
             CancellationToken cancellationToken)
         {
             // Ek-16 üzerindeki altı sağlık yardımı maddesinden birini seçtirme
-            if (form.HealthAidStatus < 3 || form.HealthAidStatus > 8)
+            if (form.HealthAidStatus < 1 || form.HealthAidStatus > 6)
             {
                 return BadRequest("Ek-16'daki sağlık yardımı maddelerinden birini seçin.");
             }

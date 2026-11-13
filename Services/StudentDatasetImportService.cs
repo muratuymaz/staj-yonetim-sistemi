@@ -698,7 +698,7 @@ public class StudentDatasetImportService
         int healthAidStatus = ParseHealthAidStatus(healthAidStatusText);
         if (healthAidStatus < 0)
         {
-            rowErrors.Add("saglik yardimi statusu gecersiz");
+            rowErrors.Add("saglik yardimi statusu 1-6 arasinda olmalidir");
         }
 
         if (rowErrors.Count > 0)
@@ -743,22 +743,15 @@ public class StudentDatasetImportService
 
     private static int ParseHealthAidStatus(string value)
     {
-        // Sayısal sağlık statülerini doğrudan kabul etme
+        // Ek-16 üzerindeki altı sağlık yardımı maddesini kabul etme
         string normalizedValue = Normalize(value);
 
-        if (int.TryParse(normalizedValue, out int numericValue) && numericValue >= 0 && numericValue <= 2)
+        if (int.TryParse(normalizedValue, out int numericValue) && numericValue >= 1 && numericValue <= 6)
         {
             return numericValue;
         }
 
-        // Metin olarak gelen sağlık statülerini sayısal karşılığına çevirme
-        return normalizedValue switch
-        {
-            "yararlaniyor" or "var" or "evet" => 0,
-            "yararlanmiyor" or "yok" or "hayir" => 1,
-            "belirtilmedi" or "bilinmiyor" => 2,
-            _ => -1
-        };
+        return -1;
     }
 
     private static void ApplyRecord(TestStudent student, StudentDatasetImportRow record)

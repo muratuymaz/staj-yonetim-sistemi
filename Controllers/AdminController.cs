@@ -233,45 +233,48 @@ namespace StajYonetimSistemi.Controllers
             return Ok(new { message = "Öğrenci bilgileri kaydedildi." });
         }
 
-        // Tamamlananlar dahil öğrenci hesabını ve bağlı belgelerini silme
+        // Seçilen Ek-16 belgesini ve ona bağlı okuma sonucunu silme
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteStudent(int studentId, CancellationToken cancellationToken)
+        public async Task<IActionResult> DeleteDocument(int documentId, CancellationToken cancellationToken)
         {
-            Student? student = await database.Students.FindAsync(new object[] { studentId }, cancellationToken);
-            if (student == null)
-                return NotFound("Öğrenci bulunamadı.");
+            Document? document = await database.Documents.FindAsync(
+                new object[] { documentId }, cancellationToken);
+            if (document == null)
+                return NotFound("Belge bulunamadı.");
 
-            List<Document> documents = await database.Documents
-                .Where(item => item.StudentId == studentId)
-                .ToListAsync(cancellationToken);
+            // Panelde gösterilen son belge dışında bir belgeyi bu işlemle silmeme
+            Document? latestDocument = await LatestDocument(document.StudentId, cancellationToken);
+            if (latestDocument?.Id != documentId)
+                return BadRequest("Yalnızca öğrencinin son yüklediği belge silinebilir.");
 
-            database.Documents.RemoveRange(documents);
-            database.Students.Remove(student);
+            DocumentReadResult? readResult = await database.DocumentReadResults
+                .FirstOrDefaultAsync(item => item.DocumentId == documentId, cancellationToken);
+            if (readResult != null)
+                database.DocumentReadResults.Remove(readResult);
+
+            database.Documents.Remove(document);
             await database.SaveChangesAsync(cancellationToken);
 
-            // Veritabanı kaydı silindikten sonra yüklenen dosyaları da temizleme
+            // Veritabanı kaydı silindikten sonra yüklenen dosyayı da temizleme
             string documentsDirectory = Path.GetFullPath(Path.Combine(
                 environment.ContentRootPath, "Uploads", "Documents"));
-            foreach (Document document in documents)
+            string filePath = Path.GetFullPath(Path.Combine(environment.ContentRootPath,
+                document.FilePath.Replace('/', Path.DirectorySeparatorChar)));
+            if (string.Equals(Path.GetDirectoryName(filePath), documentsDirectory,
+                StringComparison.OrdinalIgnoreCase))
             {
-                string filePath = Path.GetFullPath(Path.Combine(environment.ContentRootPath,
-                    document.FilePath.Replace('/', Path.DirectorySeparatorChar)));
-                if (!string.Equals(Path.GetDirectoryName(filePath), documentsDirectory,
-                    StringComparison.OrdinalIgnoreCase))
-                    continue;
-
                 try
                 {
                     System.IO.File.Delete(filePath);
                 }
                 catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
                 {
-                    logger.LogWarning(exception, "Silinen öğrenciye ait dosya temizlenemedi: {Path}", filePath);
+                    logger.LogWarning(exception, "Silinen belge dosyası temizlenemedi: {Path}", filePath);
                 }
             }
 
-            return Ok(new { message = "Öğrenci kaydı ve belgeleri silindi." });
+            return Ok(new { message = "Ek-16 belgesi silindi." });
         }
 
         // Onaylanan son belgeyi admin tarafından tamamlandı durumuna geçirme

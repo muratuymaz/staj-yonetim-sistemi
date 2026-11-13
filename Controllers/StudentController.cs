@@ -317,6 +317,14 @@ namespace StajYonetimSistemi.Controllers
             if (hasCompletedDocument)
                 return Conflict("Tamamlanan Ek-16 belgesi öğrenci tarafından değiştirilemez.");
 
+            // Önceki yükleme varsa aynı belge kaydını güncelleme
+            Document? document = await database.Documents
+                .Where(item => item.StudentId == userId)
+                .OrderByDescending(item => item.UploadedAt)
+                .ThenByDescending(item => item.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+            string? previousFilePath = document?.FilePath;
+
             // Kullanıcının dosya adını fiziksel yolda kullanmıyor, GUID ile çakışmayı önlüyoruz.
             string extension = Path.GetExtension(file.FileName).ToLowerInvariant();
             string storedFileName = $"{Guid.NewGuid():N}{extension}";
@@ -328,7 +336,6 @@ namespace StajYonetimSistemi.Controllers
 
             // Veritabanında Windows/Mac'e özgü mutlak yol yerine taşınabilir göreli yol tutuyoruz.
             string relativePath = $"Uploads/Documents/{storedFileName}";
-            Document? document = null;
 
             try
             {
@@ -347,8 +354,13 @@ namespace StajYonetimSistemi.Controllers
                 // Dosya tamamlandıktan sonra aynı klasörde nihai GUID adına taşı.
                 System.IO.File.Move(temporaryPath, finalPath);
 
-                document = new Document();
-                document.StudentId = student.Id;
+                if (document == null)
+                {
+                    document = new Document();
+                    document.StudentId = student.Id;
+                    database.Documents.Add(document);
+                }
+
                 document.OriginalFileName = Path.GetFileName(file.FileName);
                 document.FilePath = relativePath;
                 document.UploadedAt = DateTime.UtcNow;
@@ -371,7 +383,14 @@ namespace StajYonetimSistemi.Controllers
                 student.PreviousInternshipDays = form.PreviousInternshipDays;
                 student.HealthAidStatus = form.HealthAidStatus;
 
-                database.Documents.Add(document);
+                // Yeniden yüklemede eski belgeden okunan alanları kaldırma
+                if (document.Id != 0)
+                {
+                    DocumentReadResult? previousReadResult = await database.DocumentReadResults
+                        .FirstOrDefaultAsync(item => item.DocumentId == document.Id, cancellationToken);
+                    if (previousReadResult != null)
+                        database.DocumentReadResults.Remove(previousReadResult);
+                }
 
                 // Profil ve belgeyi tek veritabanı işlemiyle kaydetme
                 await database.SaveChangesAsync(cancellationToken);
@@ -397,6 +416,25 @@ namespace StajYonetimSistemi.Controllers
 
                 return StatusCode(500,
                     "Bilgiler ve dosya kaydedilemedi. Lütfen tekrar deneyin.");
+            }
+
+            // Yeni belge kaydedildikten sonra önceki dosyayı temizleme
+            if (!string.IsNullOrWhiteSpace(previousFilePath))
+            {
+                try
+                {
+                    string previousFullPath = Path.GetFullPath(Path.Combine(
+                        environment.ContentRootPath,
+                        previousFilePath.Replace('/', Path.DirectorySeparatorChar)));
+                    if (string.Equals(Path.GetDirectoryName(previousFullPath),
+                        Path.GetFullPath(documentsDirectory), StringComparison.OrdinalIgnoreCase) &&
+                        !string.Equals(previousFullPath, finalPath, StringComparison.OrdinalIgnoreCase))
+                        TryDeleteUploadFile(previousFullPath);
+                }
+                catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
+                {
+                    logger.LogWarning(exception, "Önceki Ek-16 dosyasının yolu okunamadı.");
+                }
             }
 
             string extractedText = "";

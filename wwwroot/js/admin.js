@@ -217,7 +217,7 @@ const detailPanel = document.getElementById("adminStudentDetails");
 const detailMessage = document.getElementById("detailMessage");
 const adminStudentForm = document.getElementById("adminStudentForm");
 const completeAdminDocument = document.getElementById("completeAdminDocument");
-const deleteAdminStudent = document.getElementById("deleteAdminStudent");
+const deleteAdminDocument = document.getElementById("deleteAdminDocument");
 let selectedDocumentId = null;
 
 registeredNumberSearch?.addEventListener("input", function () {
@@ -314,6 +314,7 @@ async function showStudentDetails(studentId) {
             ? `${data.documentName} — ${data.documentStatus}`
             : "Ek-16 belgesi yüklenmedi.";
         selectedDocumentId = data.documentId;
+        deleteAdminDocument.disabled = !data.documentId;
         fillAdminForm(data.profile);
         adminStudentForm.elements.namedItem("InternshipStartDate").required = !!data.documentId;
         adminStudentForm.elements.namedItem("InternshipEndDate").required = !!data.documentId;
@@ -393,18 +394,18 @@ completeAdminDocument?.addEventListener("click", async () => {
     }
 });
 
-deleteAdminStudent?.addEventListener("click", async () => {
-    if (!confirm("Öğrenci hesabı ve yüklediği bütün belgeler silinsin mi?")) return;
+deleteAdminDocument?.addEventListener("click", async () => {
+    if (!selectedDocumentId || !confirm("Seçili Ek-16 belgesi silinsin mi?")) return;
     const data = new FormData();
-    data.append("studentId", document.getElementById("adminStudentId").value);
+    data.append("documentId", selectedDocumentId);
     data.append("__RequestVerificationToken",
         adminStudentForm.querySelector("input[name='__RequestVerificationToken']").value);
-    deleteAdminStudent.disabled = true;
+    deleteAdminDocument.disabled = true;
     try {
-        await postAdminAction("/Admin/DeleteStudent", data);
-        location.assign("/Admin");
+        await postAdminAction("/Admin/DeleteDocument", data);
+        location.reload();
     } catch (error) {
         detailMessage.textContent = error.message;
-        deleteAdminStudent.disabled = false;
+        deleteAdminDocument.disabled = false;
     }
 });

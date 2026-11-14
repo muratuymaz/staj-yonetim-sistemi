@@ -437,6 +437,10 @@ namespace StajYonetimSistemi.Controllers
                 }
             }
 
+            // Belge okuma ve karşılaştırma öncesinde inceleme durumuna geçirme
+            document.Status = "Reviewing";
+            await database.SaveChangesAsync(cancellationToken);
+
             string extractedText = "";
             string? extractionWarning = null;
             DocumentReadResult? extractedFields = null;
@@ -474,13 +478,6 @@ namespace StajYonetimSistemi.Controllers
                         document.Id);
                     extractionWarning = "Belge kaydedildi ancak metin alanları çıkarılamadı.";
                 }
-            }
-
-            // Otomatik okuma yapılamayan belgeleri admin incelemesine bırakma
-            if (document.Status == "Uploaded")
-            {
-                document.Status = "Reviewing";
-                await database.SaveChangesAsync(cancellationToken);
             }
 
             return Ok(new

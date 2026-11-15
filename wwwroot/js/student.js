@@ -1,3 +1,4 @@
+// Öğrenci formu ve belge kontrol alanlarını kullanıma hazırlama
 const profileForm = document.getElementById("studentProfileForm");
 const profileFormMessage = document.getElementById("profileFormMessage");
 const documentReport = document.getElementById("documentReport");
@@ -27,6 +28,7 @@ const comparisonStatuses = {
     unreadable: "Belgeden okunamadı", formValueMissing: "Formda boş"
 };
 
+// Son yüklenen Ek-16 belgesinin kontrol sonucunu gösterme
 async function loadDocumentReport() {
     const response = await fetch("/Student/Report", {
         headers: { "Accept": "application/json" }
@@ -67,16 +69,13 @@ async function loadDocumentReport() {
     }
 }
 
+// Kaydedilmiş bir değeri form alanına aktarma
 function setProfileValue(name, value) {
     const input = profileForm.querySelector(`[name='${name}']`);
-
-    if (!input || value === null || value === undefined) {
-        return;
-    }
-
-    input.value = value;
+    if (input && value != null) input.value = value;
 }
 
+// Öğrencinin kayıtlı bilgilerini forma yükleme
 async function loadSavedProfile() {
     try {
         const response = await fetch("/Student/Profile", {
@@ -90,20 +89,23 @@ async function loadSavedProfile() {
         }
 
         const profile = await response.json();
-        setProfileValue("Email", profile.email);
-        setProfileValue("StudentNumber", profile.studentNumber);
-        setProfileValue("FullName", profile.fullName);
-        setProfileValue("IdentityNumber", profile.identityNumber);
-        setProfileValue("Nationality", profile.nationality);
-        setProfileValue("BirthDate", profile.birthDate?.substring(0, 10));
-        setProfileValue("Address", profile.address);
-        setProfileValue("PhoneNumber", profile.phoneNumber);
-        setProfileValue("Department", profile.department);
-        setProfileValue("AcademicYear", profile.academicYear);
-        setProfileValue("PreviousInternshipDays", profile.previousInternshipDays);
-        setProfileValue("HealthAidStatus", profile.healthAidStatus);
-        setProfileValue("InternshipStartDate", profile.internshipStartDate?.substring(0, 10));
-        setProfileValue("InternshipEndDate", profile.internshipEndDate?.substring(0, 10));
+        const fields = {
+            Email: profile.email,
+            StudentNumber: profile.studentNumber,
+            FullName: profile.fullName,
+            IdentityNumber: profile.identityNumber,
+            Nationality: profile.nationality,
+            BirthDate: profile.birthDate?.substring(0, 10),
+            Address: profile.address,
+            PhoneNumber: profile.phoneNumber,
+            Department: profile.department,
+            AcademicYear: profile.academicYear,
+            PreviousInternshipDays: profile.previousInternshipDays,
+            HealthAidStatus: profile.healthAidStatus,
+            InternshipStartDate: profile.internshipStartDate?.substring(0, 10),
+            InternshipEndDate: profile.internshipEndDate?.substring(0, 10)
+        };
+        Object.entries(fields).forEach(([name, value]) => setProfileValue(name, value));
 
         // Son kayıtta seçilen haftalık staj günlerini yeniden işaretleme
         const savedDays = profile.internshipDays ?? [];
@@ -115,6 +117,7 @@ async function loadSavedProfile() {
     }
 }
 
+// Form gönderiminde alanları kontrol edip form ve Ek-16'yı birlikte kaydetme
 if (profileForm && profileFormMessage) {
     loadSavedProfile();
     loadDocumentReport().catch(() => {});

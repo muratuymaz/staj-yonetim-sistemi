@@ -1,3 +1,4 @@
+// CSV yükleme ve önizleme alanlarını kullanıma hazırlama
 const datasetFile = document.getElementById("datasetFile");
 const datasetFileName = document.getElementById("datasetFileName");
 const datasetMessage = document.getElementById("datasetMessage");
@@ -13,6 +14,19 @@ const referenceCount = document.getElementById("referenceCount");
 let csvRows = [];
 let datasetReader = null;
 let csvValidationError = "";
+
+function setDatasetButtonsDisabled(disabled) {
+    datasetPreviewButton.disabled = disabled;
+    datasetImportButton.disabled = disabled || csvValidationError !== "";
+}
+
+function rejectDatasetFile(message) {
+    datasetFileName.textContent = message;
+    datasetMessage.textContent = "";
+    datasetMessage.classList.remove("success-message");
+    setDatasetButtonsDisabled(true);
+    datasetFile.value = "";
+}
 
 function clearCsvPreview() {
     datasetPreview.hidden = true;
@@ -35,7 +49,7 @@ function resetDatasetSelection() {
     clearCsvPreview();
 }
 
-// Tırnak içindeki ayraçları ve satır sonlarını hücre değeri olarak okuma
+// CSV satırlarını ayraç ve tırnak kurallarına göre okuma
 function parseCsv(text) {
     const firstLine = text.split(/\r?\n/, 1)[0];
     const delimiter = (firstLine.match(/;/g) ?? []).length > (firstLine.match(/,/g) ?? []).length ? ";" : ",";
@@ -77,7 +91,7 @@ function normalizeCsvHeader(value) {
         .replace(/[^a-z0-9]+/g, " ").trim();
 }
 
-// Sağlık kodunu dosyanın tamamında, kaydetmeden önce kontrol etme
+// Sağlık yardım değerlerinin 1-6 aralığında olmasını kontrol etme
 function validateCsvHealth(rows) {
     if (rows.length < 2) return "CSV dosyasında kayıt bulunamadı.";
 
@@ -95,6 +109,7 @@ function validateCsvHealth(rows) {
     return "";
 }
 
+// Önizlemede CSV içeriğinin HTML olarak çalışmasını engelleme
 function escapeHtml(value) {
     return value.replace(/[&<>'"]/g, character => ({
         "&": "&amp;",
@@ -105,6 +120,7 @@ function escapeHtml(value) {
     }[character]));
 }
 
+// CSV içinden ilk on kaydı önizleme tablosunda gösterme
 function renderCsvPreview() {
     if (csvRows.length < 2) {
         datasetMessage.textContent = "CSV dosyasında gösterilecek kayıt bulunamadı.";
@@ -139,30 +155,19 @@ datasetFile?.addEventListener("change", function () {
     const file = datasetFile.files[0];
 
     if (!file || !file.name.toLowerCase().endsWith(".csv")) {
-        datasetFileName.textContent = "Geçerli bir CSV dosyası seçilmedi.";
-        datasetMessage.textContent = "";
-        datasetMessage.classList.remove("success-message");
-        datasetPreviewButton.disabled = true;
-        datasetImportButton.disabled = true;
-        datasetFile.value = "";
+        rejectDatasetFile("Geçerli bir CSV dosyası seçilmedi.");
         return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-        datasetFileName.textContent = "CSV dosyası 10 MB'dan büyük olamaz.";
-        datasetMessage.textContent = "";
-        datasetMessage.classList.remove("success-message");
-        datasetPreviewButton.disabled = true;
-        datasetImportButton.disabled = true;
-        datasetFile.value = "";
+        rejectDatasetFile("CSV dosyası 10 MB'dan büyük olamaz.");
         return;
     }
 
     datasetFileName.textContent = `${file.name} (${Math.ceil(file.size / 1024)} KB)`;
     datasetMessage.textContent = "Dosya seçildi. Önizlemeyi göstermek için butona basın.";
     datasetMessage.classList.remove("success-message");
-    datasetPreviewButton.disabled = true;
-    datasetImportButton.disabled = true;
+    setDatasetButtonsDisabled(true);
 
     const reader = new FileReader();
     datasetReader = reader;
@@ -179,8 +184,7 @@ datasetFile?.addEventListener("change", function () {
     reader.onerror = () => {
         if (datasetReader !== reader) return;
         datasetMessage.textContent = "CSV dosyası okunamadı.";
-        datasetPreviewButton.disabled = true;
-        datasetImportButton.disabled = true;
+        setDatasetButtonsDisabled(true);
     };
     reader.readAsText(file, "UTF-8");
 });
@@ -193,21 +197,30 @@ datasetPreviewButton?.addEventListener("click", function () {
     }
 });
 
-// Öğrenci numarasına göre kaydedilen referansları süzme
-referenceNumberSearch?.addEventListener("input", function () {
-    const studentNumber = referenceNumberSearch.value.trim();
-    const rows = document.querySelectorAll(".reference-table tbody tr[data-student-number]");
+// Öğrenci numarasına göre tabloda bulunan kayıtları süzme
+function filterStudentRows(input, rowSelector, emptyRow, countBadge, itemName) {
+    const searchValue = input.value.trim();
+    const rows = document.querySelectorAll(rowSelector);
     let visibleCount = 0;
 
     rows.forEach(row => {
-        row.hidden = !row.dataset.studentNumber.includes(studentNumber);
+        row.hidden = !row.dataset.studentNumber.includes(searchValue);
         if (!row.hidden) visibleCount++;
     });
 
-    referenceSearchEmpty.hidden = visibleCount > 0;
-    referenceCount.textContent = studentNumber
-        ? `${visibleCount} / ${rows.length} kayıt`
-        : `${rows.length} kayıt`;
+    emptyRow.hidden = visibleCount > 0;
+    countBadge.textContent = searchValue
+        ? `${visibleCount} / ${rows.length} ${itemName}`
+        : `${rows.length} ${itemName}`;
+}
+
+referenceNumberSearch?.addEventListener("input", () => {
+    filterStudentRows(
+        referenceNumberSearch,
+        ".reference-table tbody tr[data-student-number]",
+        referenceSearchEmpty,
+        referenceCount,
+        "kayıt");
 });
 
 const registeredNumberSearch = document.getElementById("registeredNumberSearch");
@@ -220,20 +233,13 @@ const completeAdminDocument = document.getElementById("completeAdminDocument");
 const deleteAdminDocument = document.getElementById("deleteAdminDocument");
 let selectedDocumentId = null;
 
-registeredNumberSearch?.addEventListener("input", function () {
-    const number = registeredNumberSearch.value.trim();
-    const rows = document.querySelectorAll(".registered-student-row");
-    let visibleCount = 0;
-
-    rows.forEach(row => {
-        row.hidden = !row.dataset.studentNumber.includes(number);
-        if (!row.hidden) visibleCount++;
-    });
-
-    registeredSearchEmpty.hidden = visibleCount > 0;
-    registeredCount.textContent = number
-        ? `${visibleCount} / ${rows.length} öğrenci`
-        : `${rows.length} öğrenci`;
+registeredNumberSearch?.addEventListener("input", () => {
+    filterStudentRows(
+        registeredNumberSearch,
+        ".registered-student-row",
+        registeredSearchEmpty,
+        registeredCount,
+        "öğrenci");
 });
 
 const fieldLabels = {
@@ -245,6 +251,7 @@ const fieldLabels = {
     InternshipStartDate: "Staj başlangıcı", InternshipEndDate: "Staj bitişi"
 };
 
+// Belge, form ve referans alanlarının karşılaştırma tablosunu oluşturma
 function renderComparisonRows(targetId, comparisons, unreadableText, emptyText) {
     const target = document.getElementById(targetId);
     target.replaceChildren();
@@ -259,7 +266,7 @@ function renderComparisonRows(targetId, comparisons, unreadableText, emptyText) 
         return;
     }
 
-    for (const item of comparisons ?? []) {
+    for (const item of comparisons) {
         const row = document.createElement("tr");
         const status = item.status === "match" ? "Eşleşiyor"
             : item.status === "mismatch" ? "Uyuşmuyor"
@@ -299,6 +306,7 @@ function fillAdminForm(profile) {
     });
 }
 
+// Seçilen öğrencinin form, belge ve referans bilgilerini yükleme
 async function showStudentDetails(studentId) {
     detailPanel.hidden = false;
     detailMessage.textContent = "Öğrenci bilgileri yükleniyor...";
@@ -358,6 +366,7 @@ if (initialStudentId && /^\d+$/.test(initialStudentId)) {
     showStudentDetails(initialStudentId);
 }
 
+// Yönetici işlemlerini sunucuya gönderip yanıtı kontrol etme
 async function postAdminAction(url, formData) {
     const response = await fetch(url, { method: "POST", body: formData });
     const text = await response.text();
@@ -378,34 +387,31 @@ adminStudentForm?.addEventListener("submit", async event => {
     }
 });
 
-completeAdminDocument?.addEventListener("click", async () => {
-    if (!selectedDocumentId) return;
-    completeAdminDocument.disabled = true;
+async function runDocumentAction(button, url, confirmationMessage = "") {
+    if (!selectedDocumentId || (confirmationMessage && !confirm(confirmationMessage))) return;
+
+    button.disabled = true;
     const data = new FormData();
     data.append("documentId", selectedDocumentId);
     data.append("__RequestVerificationToken",
         adminStudentForm.querySelector("input[name='__RequestVerificationToken']").value);
+
     try {
-        await postAdminAction("/Admin/CompleteDocument", data);
+        await postAdminAction(url, data);
         location.reload();
     } catch (error) {
         detailMessage.textContent = error.message;
-        completeAdminDocument.disabled = false;
+        button.disabled = false;
     }
+}
+
+completeAdminDocument?.addEventListener("click", () => {
+    runDocumentAction(completeAdminDocument, "/Admin/CompleteDocument");
 });
 
-deleteAdminDocument?.addEventListener("click", async () => {
-    if (!selectedDocumentId || !confirm("Seçili Ek-16 belgesi silinsin mi?")) return;
-    const data = new FormData();
-    data.append("documentId", selectedDocumentId);
-    data.append("__RequestVerificationToken",
-        adminStudentForm.querySelector("input[name='__RequestVerificationToken']").value);
-    deleteAdminDocument.disabled = true;
-    try {
-        await postAdminAction("/Admin/DeleteDocument", data);
-        location.reload();
-    } catch (error) {
-        detailMessage.textContent = error.message;
-        deleteAdminDocument.disabled = false;
-    }
+deleteAdminDocument?.addEventListener("click", () => {
+    runDocumentAction(
+        deleteAdminDocument,
+        "/Admin/DeleteDocument",
+        "Seçili Ek-16 belgesi silinsin mi?");
 });

@@ -8,6 +8,7 @@ namespace StajYonetimSistemi.Services;
 
 public sealed class DocumentFileValidator(ILogger<DocumentFileValidator> logger)
 {
+    // Dosya boyutu sınırını ve izin verilen uzantıları belirleme
     private const long MaxFileSize = 10 * 1024 * 1024;
     private const string InvalidFileMessage = "Dosya geçersiz veya bozuk. Lütfen geçerli bir belge seçin.";
     private static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase)
@@ -37,14 +38,27 @@ public sealed class DocumentFileValidator(ILogger<DocumentFileValidator> logger)
                 return InvalidFileMessage;
             }
 
-            bool isReadable = extension.ToLowerInvariant() switch
+            // Uzantıya uygun dosya kontrolünü seçme
+            string normalizedExtension = extension.ToLowerInvariant();
+            bool isReadable = false;
+
+            if (normalizedExtension == ".doc")
             {
-                ".doc" => IsReadableLegacyWord(file),
-                ".docx" => IsReadableDocx(file),
-                ".pdf" => IsReadablePdf(file),
-                ".jpg" or ".jpeg" or ".png" => IsReadableImage(file, cancellationToken),
-                _ => false
-            };
+                isReadable = IsReadableLegacyWord(file);
+            }
+            else if (normalizedExtension == ".docx")
+            {
+                isReadable = IsReadableDocx(file);
+            }
+            else if (normalizedExtension == ".pdf")
+            {
+                isReadable = IsReadablePdf(file);
+            }
+            else if (normalizedExtension == ".jpg" || normalizedExtension == ".jpeg" ||
+                     normalizedExtension == ".png")
+            {
+                isReadable = IsReadableImage(file, cancellationToken);
+            }
 
             if (isReadable)
             {
@@ -86,6 +100,7 @@ public sealed class DocumentFileValidator(ILogger<DocumentFileValidator> logger)
             }
         }
 
+        // Her dosya türü için beklenen başlangıç baytlarını belirleme
         ReadOnlySpan<byte> expected = extension.ToLowerInvariant() switch
         {
             ".doc" => [0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1],
@@ -129,6 +144,7 @@ public sealed class DocumentFileValidator(ILogger<DocumentFileValidator> logger)
                HasCompoundStream(root, "0Table", "1Table");
     }
 
+    // Eski Word dosyasında gerekli veri akışını kontrol etme
     private static bool HasCompoundStream(RootStorage root, string first, string second)
     {
         if (root.TryOpenStream(first, out CfbStream? firstTable) && firstTable is not null)

@@ -41,6 +41,7 @@ public sealed class DocumentFieldComparisonService
         return CompareReferenceFields(ToProfile(student), ToProfile(reference));
     }
 
+    // Belge ve formdaki ortak alanları karşılaştırma
     private static List<FieldComparisonResult> CompareDocumentFields(
         ComparisonProfile left,
         ComparisonProfile right)
@@ -62,6 +63,7 @@ public sealed class DocumentFieldComparisonService
         };
     }
 
+    // Ortak alanları referans öğrenci bilgileriyle karşılaştırma
     private static List<FieldComparisonResult> CompareReferenceFields(
         ComparisonProfile left,
         ComparisonProfile right)
@@ -160,40 +162,47 @@ public sealed class DocumentFieldComparisonService
         };
     }
 
+    // Metin değerlerini düzenleyip karşılaştırma
     private static FieldComparisonResult CompareText(string field, string? left, string? right)
     {
-        return CompareString(field, left, right, NormalizeText);
+        string firstValue = NormalizeText(left);
+        string secondValue = NormalizeText(right);
+        return CompareValues(field, left, right, firstValue, secondValue);
     }
 
+    // Kimlik numaralarındaki rakamları karşılaştırma
     private static FieldComparisonResult CompareDigits(string field, string? left, string? right)
     {
-        return CompareString(field, left, right, NormalizeDigits);
+        string firstValue = NormalizeDigits(left);
+        string secondValue = NormalizeDigits(right);
+        return CompareValues(field, left, right, firstValue, secondValue);
     }
 
+    // Uyruk bilgilerini ortak biçime getirip karşılaştırma
     private static FieldComparisonResult CompareNationality(string field, string? left, string? right)
     {
-        return CompareString(field, left, right, NormalizeNationality);
+        string firstValue = NormalizeNationality(left);
+        string secondValue = NormalizeNationality(right);
+        return CompareValues(field, left, right, firstValue, secondValue);
     }
 
+    // E-posta adreslerini karşılaştırma
     private static FieldComparisonResult CompareEmail(string field, string? left, string? right)
     {
-        return CompareString(field, left, right, NormalizeEmail);
+        string firstValue = NormalizeEmail(left);
+        string secondValue = NormalizeEmail(right);
+        return CompareValues(field, left, right, firstValue, secondValue);
     }
 
+    // Telefon numaralarını karşılaştırma
     private static FieldComparisonResult ComparePhone(string field, string? left, string? right)
     {
-        return CompareString(field, left, right, NormalizePhone);
+        string firstValue = NormalizePhone(left);
+        string secondValue = NormalizePhone(right);
+        return CompareValues(field, left, right, firstValue, secondValue);
     }
 
-    private static FieldComparisonResult CompareString(
-        string field,
-        string? left,
-        string? right,
-        Func<string?, string> normalize)
-    {
-        return CompareValues(field, left, right, normalize(left), normalize(right));
-    }
-
+    // Tarihleri aynı biçime getirip karşılaştırma
     private static FieldComparisonResult CompareDate(
         string field,
         DateTime? left,
@@ -210,6 +219,7 @@ public sealed class DocumentFieldComparisonService
             NormalizeText(leftText), NormalizeText(rightText));
     }
 
+    // Sayısal değerleri karşılaştırma
     private static FieldComparisonResult CompareNumber(
         string field,
         int? left,
@@ -257,6 +267,7 @@ public sealed class DocumentFieldComparisonService
         };
     }
 
+    // Metindeki boşluk ve büyük küçük harf farklarını düzenleme
     private static string NormalizeText(string? value)
     {
         return Regex.Replace(value ?? "", @"\s+", " ")
@@ -264,26 +275,35 @@ public sealed class DocumentFieldComparisonService
             .ToUpper(CultureInfo.GetCultureInfo("tr-TR"));
     }
 
+    // Rakam dışındaki karakterleri kaldırma
     private static string NormalizeDigits(string? value)
     {
         return Regex.Replace(value ?? "", @"\D", "");
     }
 
+    // E-posta adresini karşılaştırmaya hazırlama
     private static string NormalizeEmail(string? value)
     {
         return (value ?? "").Trim().ToUpperInvariant();
     }
 
+    // Aynı uyruk ifadelerini ortak bir değere çevirme
     private static string NormalizeNationality(string? value)
     {
         string compact = Regex.Replace(NormalizeText(value), @"[^\p{L}\p{N}]", "");
 
-        return compact switch
+        if (compact == "TC" || compact == "TÜRKİYECUMHURİYETİ")
         {
-            "TC" or "TÜRKİYECUMHURİYETİ" => "TC",
-            "FOREIGN" or "FOREİGN" or "YABANCI" or "YABANCIUYRUKLU" => "FOREIGN",
-            _ => compact
-        };
+            return "TC";
+        }
+
+        if (compact == "FOREIGN" || compact == "FOREİGN" ||
+            compact == "YABANCI" || compact == "YABANCIUYRUKLU")
+        {
+            return "FOREIGN";
+        }
+
+        return compact;
     }
 
     // Telefon numaralarını karşılaştırma için aynı biçime getirme
@@ -291,14 +311,20 @@ public sealed class DocumentFieldComparisonService
     {
         string digits = NormalizeDigits(value);
 
-        return digits.Length switch
+        if (digits.Length == 12 && digits.StartsWith("90"))
         {
-            12 when digits.StartsWith("90") => digits[2..],
-            11 when digits.StartsWith("0") => digits[1..],
-            _ => digits
-        };
+            return digits[2..];
+        }
+
+        if (digits.Length == 11 && digits.StartsWith("0"))
+        {
+            return digits[1..];
+        }
+
+        return digits;
     }
 
+    // Sayıyı karşılaştırmaya hazırlama
     private static string NormalizeNumber(string? value)
     {
         if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int number))

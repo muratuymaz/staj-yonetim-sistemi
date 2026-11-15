@@ -6,6 +6,7 @@ namespace StajYonetimSistemi.Services;
 
 public sealed class Ek16FieldExtractor
 {
+    // Belge alanlarını ayırmak için kullanılan başlıkları tutma
     private static readonly string[] Labels =
     [
         "T.C. KİMLİK NO / UYRUĞU", "T.C. KİMLİK NO/UYRUĞU", "ADI SOYADI",
@@ -19,6 +20,7 @@ public sealed class Ek16FieldExtractor
         "ÇALIŞAN SAYISI", "MÜHENDİS SAYISI", "ÜCRET ALIYOR"
     ];
 
+    // Kabul edilen tarih biçimlerini belirleme
     private static readonly string[] DateFormats =
         ["d.M.yyyy", "dd.MM.yyyy", "d/M/yyyy", "dd/MM/yyyy", "yyyy-MM-dd"];
     private static readonly CultureInfo TurkishCulture = CultureInfo.GetCultureInfo("tr-TR");
@@ -130,6 +132,7 @@ public sealed class Ek16FieldExtractor
         return null;
     }
 
+    // Belge metnindeki başlık ve boşluk farklılıklarını düzenleme
     private static string NormalizeDocumentText(string text)
     {
         string normalized = Regex.Replace(text, @"\s*/\s*", "/");
@@ -182,8 +185,11 @@ public sealed class Ek16FieldExtractor
         return text[valueStart..valueEnd].Trim(' ', ':', '-', '–', '—', '.', '\t');
     }
 
-    private static string LabelPattern(string label) =>
-        Regex.Escape(label.Replace(" / ", "/"))
+    // Başlıkları arama için uygun biçime getirme
+    private static string LabelPattern(string label)
+    {
+        return Regex.Escape(label.Replace(" / ", "/"))
             .Replace("İ", "[İi]")
             .Replace("I", "[Iı]");
+    }
 }

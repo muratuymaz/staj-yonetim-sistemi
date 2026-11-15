@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Text;
 using Microsoft.AspNetCore.Http;
+using Microsoft.VisualBasic.FileIO;
 using Microsoft.EntityFrameworkCore;
 using StajYonetimSistemi.Data;
 using StajYonetimSistemi.Models;
@@ -11,327 +12,33 @@ namespace StajYonetimSistemi.Services;
 // CSV aktarımı sırasında oluşan sonuç ve hata bilgilerini tutma
 public class StudentDatasetImportResult
 {
-    private string csvText = "";
-    private List<string> headers = new List<string>();
-    private List<List<string>> rows = new List<List<string>>();
-    private List<StudentDatasetImportRow> validatedRows = new List<StudentDatasetImportRow>();
-    private int addedCount;
-    private int updatedCount;
-    private List<string> errors = new List<string>();
-
-    // Dosyanın okunmuş ham metnini tutma
-    public string CsvText
-    {
-        get
-        {
-            return csvText;
-        }
-
-        set
-        {
-            csvText = value;
-        }
-    }
-
-    // CSV başlıklarını tutma
-    public List<string> Headers
-    {
-        get
-        {
-            return headers;
-        }
-
-        set
-        {
-            headers = value;
-        }
-    }
-
-    // CSV içindeki ham satırları tutma
-    public List<List<string>> Rows
-    {
-        get
-        {
-            return rows;
-        }
-
-        set
-        {
-            rows = value;
-        }
-    }
-
-    // Doğrulaması tamamlanmış öğrenci kayıtlarını tutma
-    public List<StudentDatasetImportRow> ValidatedRows
-    {
-        get
-        {
-            return validatedRows;
-        }
-
-        set
-        {
-            validatedRows = value;
-        }
-    }
-
-    // Referans tablosuna eklenen ve güncellenen kayıt sayılarını tutma
-    public int AddedCount
-    {
-        get
-        {
-            return addedCount;
-        }
-
-        set
-        {
-            addedCount = value;
-        }
-    }
-
-    // Güncellenen referans kayıt sayısını tutma
-    public int UpdatedCount
-    {
-        get
-        {
-            return updatedCount;
-        }
-
-        set
-        {
-            updatedCount = value;
-        }
-    }
-
-    // Kullanıcıya gösterilecek hata mesajlarını tutma
-    public List<string> Errors
-    {
-        get
-        {
-            return errors;
-        }
-
-        set
-        {
-            errors = value;
-        }
-    }
-
-    // Aktarım için geçerli kayıt bulunup bulunmadığını kontrol etme
-    public bool IsSuccess
-    {
-        get
-        {
-            return Errors.Count == 0 && ValidatedRows.Count > 0;
-        }
-    }
+    public List<StudentDatasetImportRow> ValidatedRows { get; set; } = new();
+    public int AddedCount { get; set; }
+    public int UpdatedCount { get; set; }
+    public List<string> Errors { get; set; } = new();
+    public bool IsSuccess => Errors.Count == 0 && ValidatedRows.Count > 0;
 }
 
-// CSV içindeki tek bir öğrenci kaydını doğrulanmış alanlarla tutma
+// CSV içindeki doğrulanmış öğrenci kaydını tutma
 public class StudentDatasetImportRow
 {
-    private int rowNumber;
-    private string fullName = "";
-    private string identityNumber = "";
-    private string nationality = "";
-    private string studentNumber = "";
-    private DateTime birthDate;
-    private string address = "";
-    private string department = "";
-    private string academicYear = "";
-    private int previousInternshipDays;
-    private string email = "";
-    private string phoneNumber = "";
-    private int healthAidStatus;
-
-    // CSV satır numarasını tutma
-    public int RowNumber
-    {
-        get
-        {
-            return rowNumber;
-        }
-
-        set
-        {
-            rowNumber = value;
-        }
-    }
-
-    // Öğrenci kimlik ve iletişim bilgilerini tutma
-    public string FullName
-    {
-        get
-        {
-            return fullName;
-        }
-
-        set
-        {
-            fullName = value;
-        }
-    }
-
-    // Kimlik numarasını tutma
-    public string IdentityNumber
-    {
-        get
-        {
-            return identityNumber;
-        }
-
-        set
-        {
-            identityNumber = value;
-        }
-    }
-
-    // Uyruk bilgisini tutma
-    public string Nationality
-    {
-        get
-        {
-            return nationality;
-        }
-
-        set
-        {
-            nationality = value;
-        }
-    }
-
-    // Öğrenci numarasını tutma
-    public string StudentNumber
-    {
-        get
-        {
-            return studentNumber;
-        }
-
-        set
-        {
-            studentNumber = value;
-        }
-    }
-
-    // Doğum tarihini tutma
-    public DateTime BirthDate
-    {
-        get
-        {
-            return birthDate;
-        }
-
-        set
-        {
-            birthDate = value;
-        }
-    }
-
-    // Açık adresi tutma
-    public string Address
-    {
-        get
-        {
-            return address;
-        }
-
-        set
-        {
-            address = value;
-        }
-    }
-
-    // Bölüm bilgisini tutma
-    public string Department
-    {
-        get
-        {
-            return department;
-        }
-
-        set
-        {
-            department = value;
-        }
-    }
-
-    // Öğretim yılı bilgisini tutma
-    public string AcademicYear
-    {
-        get
-        {
-            return academicYear;
-        }
-
-        set
-        {
-            academicYear = value;
-        }
-    }
-
-    // Önceden yapılan staj gün sayısını tutma
-    public int PreviousInternshipDays
-    {
-        get
-        {
-            return previousInternshipDays;
-        }
-
-        set
-        {
-            previousInternshipDays = value;
-        }
-    }
-
-    // E-posta adresini tutma
-    public string Email
-    {
-        get
-        {
-            return email;
-        }
-
-        set
-        {
-            email = value;
-        }
-    }
-
-    // Telefon numarasını tutma
-    public string PhoneNumber
-    {
-        get
-        {
-            return phoneNumber;
-        }
-
-        set
-        {
-            phoneNumber = value;
-        }
-    }
-
-    // Sağlık yardımı statüsünü sayısal değer olarak tutma
-    public int HealthAidStatus
-    {
-        get
-        {
-            return healthAidStatus;
-        }
-
-        set
-        {
-            healthAidStatus = value;
-        }
-    }
+    public int RowNumber { get; set; }
+    public string FullName { get; set; } = "";
+    public string IdentityNumber { get; set; } = "";
+    public string Nationality { get; set; } = "";
+    public string StudentNumber { get; set; } = "";
+    public DateTime BirthDate { get; set; }
+    public string Address { get; set; } = "";
+    public string Department { get; set; } = "";
+    public string AcademicYear { get; set; } = "";
+    public int PreviousInternshipDays { get; set; }
+    public string Email { get; set; } = "";
+    public string PhoneNumber { get; set; } = "";
+    public int HealthAidStatus { get; set; }
 }
 
 public class StudentDatasetImportService
 {
-    // CSV dosyasının izin verilen en yüksek boyutunu belirleme
-    private const long MaxFileSize = 10 * 1024 * 1024;
-
     private readonly StajDbContext database;
 
     public StudentDatasetImportService(StajDbContext database)
@@ -412,301 +119,230 @@ public class StudentDatasetImportService
         return result;
     }
 
-    // CSV dosyasını aktarım için okuyup temel dosya kontrollerini yapma
-    public async Task<StudentDatasetImportResult> ReadFileAsync(
+
+    // CSV dosyasının izin verilen en yüksek boyutunu belirleme
+    private const long MaxFileSize = 10 * 1024 * 1024;
+    // CSV dosyasını okuyup kayıtları doğrulama
+    private async Task<StudentDatasetImportResult> ReadFileAsync(
         IFormFile? file,
         CancellationToken cancellationToken)
     {
-        StudentDatasetImportResult result = new StudentDatasetImportResult();
+        StudentDatasetImportResult result = new();
 
         if (file is null || file.Length == 0)
         {
-            // Dosya seçilmediğinde aktarımı durdurma
             result.Errors.Add("Lutfen bir CSV dosyasi secin.");
             return result;
         }
 
         if (file.Length > MaxFileSize)
         {
-            // Büyük dosyaların sunucuya aktarılmasını engelleme
             result.Errors.Add("CSV dosyasi en fazla 10 MB olabilir.");
             return result;
         }
 
-        string extension = Path.GetExtension(file.FileName);
-
-        if (extension.Equals(".csv", StringComparison.OrdinalIgnoreCase) == false)
+        if (!Path.GetExtension(file.FileName).Equals(".csv", StringComparison.OrdinalIgnoreCase))
         {
-            // CSV dışındaki dosya türlerini kabul etmeme
             result.Errors.Add("Yalnizca .csv uzantili dosyalar yuklenebilir.");
             return result;
         }
 
+        string csvText;
         try
         {
-            // Dosyayı UTF-8 kodlamasıyla metin olarak okuma
-            await using Stream fileStream = file.OpenReadStream();
-            using StreamReader reader = new(
-                fileStream,
-                new UTF8Encoding(false, true));
-
-            result.CsvText = await reader.ReadToEndAsync(cancellationToken);
+            await using Stream stream = file.OpenReadStream();
+            using StreamReader reader = new(stream, new UTF8Encoding(false, true));
+            csvText = await reader.ReadToEndAsync(cancellationToken);
         }
         catch (DecoderFallbackException)
         {
             result.Errors.Add("CSV dosyasi UTF-8 kodlamasinda olmalidir.");
+            return result;
         }
 
-        if (string.IsNullOrWhiteSpace(result.CsvText))
+        if (string.IsNullOrWhiteSpace(csvText))
         {
-            // Boş dosyaların ayrıştırılmasını engelleme
             result.Errors.Add("CSV dosyasi bos olamaz.");
             return result;
         }
 
-        // CSV ayırıcısını belirleyip dosyayı satırlara ayırma
-        char delimiter = DetectDelimiter(result.CsvText);
-        List<List<string>> parsedRows = ParseCsv(result.CsvText, delimiter);
-
-        if (parsedRows.Count < 2)
+        using StringReader textReader = new(csvText);
+        using TextFieldParser parser = new(textReader)
         {
-            // Başlıksız veya kayıtsız CSV dosyasını kabul etmeme
-            result.Errors.Add("CSV dosyasinda baslik ve en az bir kayit bulunmalidir.");
-            return result;
+            TextFieldType = FieldType.Delimited,
+            HasFieldsEnclosedInQuotes = true,
+            TrimWhiteSpace = false
+        };
+        parser.SetDelimiters(DetectDelimiter(csvText).ToString());
+
+        try
+        {
+            string[]? headers = parser.ReadFields();
+            if (headers is null || parser.EndOfData)
+            {
+                result.Errors.Add("CSV dosyasinda baslik ve en az bir kayit bulunmalidir.");
+                return result;
+            }
+
+            Dictionary<string, int> columnIndexes = CreateColumnIndexes(headers, result.Errors);
+            if (result.Errors.Count > 0)
+                return result;
+
+            HashSet<string> studentNumbers = new(StringComparer.OrdinalIgnoreCase);
+            HashSet<string> identityNumbers = new(StringComparer.OrdinalIgnoreCase);
+            HashSet<string> emails = new(StringComparer.OrdinalIgnoreCase);
+            bool hasDataRow = false;
+            int rowNumber = 2;
+
+            while (!parser.EndOfData)
+            {
+                string[]? fields = parser.ReadFields();
+                if (fields is null)
+                    continue;
+
+                hasDataRow = true;
+                if (fields.All(string.IsNullOrWhiteSpace))
+                    continue;
+
+                StudentDatasetImportRow? record = ValidateRow(
+                    fields, columnIndexes, rowNumber, result.Errors);
+
+                if (record != null)
+                {
+                    if (!studentNumbers.Add(record.StudentNumber))
+                        result.Errors.Add($"{rowNumber}. satir: Ogrenci numarasi CSV icinde tekrar ediyor.");
+
+                    if (!identityNumbers.Add(record.IdentityNumber))
+                        result.Errors.Add($"{rowNumber}. satir: Kimlik numarasi CSV icinde tekrar ediyor.");
+
+                    if (!emails.Add(record.Email))
+                        result.Errors.Add($"{rowNumber}. satir: E-posta adresi CSV icinde tekrar ediyor.");
+
+                    result.ValidatedRows.Add(record);
+                }
+
+                rowNumber++;
+            }
+
+            if (!hasDataRow)
+                result.Errors.Add("CSV dosyasinda baslik ve en az bir kayit bulunmalidir.");
+            else if (result.ValidatedRows.Count == 0 && result.Errors.Count == 0)
+                result.Errors.Add("CSV dosyasinda aktarilacak kayit bulunamadi.");
         }
-
-        // İlk satırı başlık, kalan satırları öğrenci kayıtları olarak ayırma
-        result.Headers = parsedRows[0];
-        result.Rows = parsedRows.Skip(1)
-            .Where(row => row.Any(value => string.IsNullOrWhiteSpace(value) == false))
-            .ToList();
-
-        if (result.Rows.Count == 0)
+        catch (MalformedLineException exception)
         {
-            // Yalnızca boş satırlardan oluşan dosyaları kabul etmeme
-            result.Errors.Add("CSV dosyasinda aktarilacak kayit bulunamadi.");
-            return result;
-        }
-
-        // Projede gerekli olan sütun başlıklarını kontrol etme
-        ValidateRequiredHeaders(result.Headers, result.Errors);
-
-        if (result.Errors.Count > 0)
-        {
-            return result;
-        }
-
-        // Başlıkların satır içindeki sütun numaralarını hazırlama
-        Dictionary<string, int> headerIndexes = CreateHeaderIndexes(result.Headers);
-        HashSet<string> studentNumbers = new(StringComparer.OrdinalIgnoreCase);
-        HashSet<string> identityNumbers = new(StringComparer.OrdinalIgnoreCase);
-        HashSet<string> emails = new(StringComparer.OrdinalIgnoreCase);
-
-        for (int index = 0; index < result.Rows.Count; index++)
-        {
-            // Her satırı öğrenci kaydına dönüştürüp doğrulama
-            int rowNumber = index + 2;
-            StudentDatasetImportRow? validatedRow = ValidateRow(
-                result.Rows[index],
-                headerIndexes,
-                rowNumber,
-                result.Errors);
-
-            if (validatedRow is null)
-            {
-                continue;
-            }
-
-            if (studentNumbers.Add(validatedRow.StudentNumber) == false)
-            {
-                // Aynı öğrenci numarasının dosyada tekrar etmesini engelleme
-                result.Errors.Add($"{rowNumber}. satir: Ogrenci numarasi CSV icinde tekrar ediyor.");
-            }
-
-            if (identityNumbers.Add(validatedRow.IdentityNumber) == false)
-            {
-                // Aynı kimlik numarasının dosyada tekrar etmesini engelleme
-                result.Errors.Add($"{rowNumber}. satir: Kimlik numarasi CSV icinde tekrar ediyor.");
-            }
-
-            if (emails.Add(validatedRow.Email) == false)
-            {
-                // Aynı e-posta adresinin dosyada tekrar etmesini engelleme
-                result.Errors.Add($"{rowNumber}. satir: E-posta adresi CSV icinde tekrar ediyor.");
-            }
-
-            result.ValidatedRows.Add(validatedRow);
+            result.Errors.Add($"CSV dosyasinin {exception.LineNumber}. satiri okunamadi.");
         }
 
         return result;
     }
-
-    // CSV başlıklarının farklı yazım biçimlerini öğrenci alanlarına eşleme
+    // CSV başlıklarını alanlara eşleyip zorunlu sütunları kontrol etme
     private static readonly Dictionary<string, string[]> requiredColumnAliases = new()
     {
-        { "FullName", new[] { "ogrenci ad soyad", "ad soyad", "full name" } },
-        { "IdentityNumber", new[] { "tc kimlik no", "t c kimlik no", "kimlik no", "tc no", "yabanci kimlik no" } },
-        { "Nationality", new[] { "uyruk", "nationality" } },
-        { "StudentNumber", new[] { "ogrenci no", "ogrenci numarasi", "student number" } },
-        { "BirthDate", new[] { "dogum tarihi", "birth date" } },
-        { "Address", new[] { "ikametgah adresi", "acik adres", "adres", "address" } },
-        { "Department", new[] { "bolum", "department" } },
-        { "AcademicYear", new[] { "ek 16 teslim yili", "ek16 teslim yili", "teslim yili", "academic year" } },
-        { "PreviousInternshipDays", new[] { "daha once yapilan staj gun sayisi", "onceki staj gun sayisi", "previous internship days" } },
-        { "Email", new[] { "e posta", "eposta", "email", "e mail" } },
-        { "PhoneNumber", new[] { "telefon no", "telefon numarasi", "telefon", "phone" } },
-        { "HealthAidStatus", new[] { "saglik yardimi statusu", "saglik yardimi", "sigorta durumu", "health aid status" } }
+        { "FullName", ["ogrenci ad soyad", "ad soyad", "full name"] },
+        { "IdentityNumber", ["tc kimlik no", "t c kimlik no", "kimlik no", "tc no", "yabanci kimlik no"] },
+        { "Nationality", ["uyruk", "nationality"] },
+        { "StudentNumber", ["ogrenci no", "ogrenci numarasi", "student number"] },
+        { "BirthDate", ["dogum tarihi", "birth date"] },
+        { "Address", ["ikametgah adresi", "acik adres", "adres", "address"] },
+        { "Department", ["bolum", "department"] },
+        { "AcademicYear", ["ek 16 teslim yili", "ek16 teslim yili", "teslim yili", "academic year"] },
+        { "PreviousInternshipDays", ["daha once yapilan staj gun sayisi", "onceki staj gun sayisi", "previous internship days"] },
+        { "Email", ["e posta", "eposta", "email", "e mail"] },
+        { "PhoneNumber", ["telefon no", "telefon numarasi", "telefon", "phone"] },
+        { "HealthAidStatus", ["saglik yardimi statusu", "saglik yardimi", "sigorta durumu", "health aid status"] }
     };
 
-    // CSV başlıklarının proje için gerekli alanları içerip içermediğini kontrol etme
-    private static void ValidateRequiredHeaders(
-        List<string> headers,
+    private static Dictionary<string, int> CreateColumnIndexes(
+        string[] headers,
         List<string> errors)
     {
-        // Başlıkları karşılaştırma için ortak bir biçime dönüştürme
-        HashSet<string> normalizedHeaders = headers
-            .Select(Normalize)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        Dictionary<string, int> headerIndexes = new(StringComparer.OrdinalIgnoreCase);
+        for (int index = 0; index < headers.Length; index++)
+            headerIndexes[Normalize(headers[index])] = index;
 
+        Dictionary<string, int> columnIndexes = new();
         foreach (KeyValuePair<string, string[]> column in requiredColumnAliases)
         {
-            // Her alan için tanımlanan başlık seçeneklerinden birini arama
-            bool columnExists = column.Value.Any(alias =>
-                normalizedHeaders.Contains(Normalize(alias)));
+            string? alias = column.Value.FirstOrDefault(value =>
+                headerIndexes.ContainsKey(Normalize(value)));
 
-            if (columnExists == false)
-            {
-                // Eksik başlık varsa aktarımı durdurmak üzere hata ekleme
+            if (alias is null)
                 errors.Add($"CSV basliginda '{column.Key}' alani bulunamadi.");
-            }
-        }
-    }
-
-    private static Dictionary<string, int> CreateHeaderIndexes(List<string> headers)
-    {
-        // Her normalize edilmiş başlığı sütun numarasıyla eşleme
-        Dictionary<string, int> indexes = new(StringComparer.OrdinalIgnoreCase);
-
-        for (int index = 0; index < headers.Count; index++)
-        {
-            string normalizedHeader = Normalize(headers[index]);
-
-            if (string.IsNullOrWhiteSpace(normalizedHeader) == false)
-            {
-                indexes[normalizedHeader] = index;
-            }
+            else
+                columnIndexes[column.Key] = headerIndexes[Normalize(alias)];
         }
 
-        return indexes;
+        return columnIndexes;
     }
 
     private static StudentDatasetImportRow? ValidateRow(
-        List<string> row,
-        Dictionary<string, int> headers,
+        string[] row,
+        Dictionary<string, int> columns,
         int rowNumber,
         List<string> errors)
     {
-        // Sütunlardaki ham değerleri alanlara göre okuma
-        string fullName = GetColumnValue(row, headers, "FullName");
-        string identityNumber = GetColumnValue(row, headers, "IdentityNumber");
-        string nationality = GetColumnValue(row, headers, "Nationality");
-        string studentNumber = GetColumnValue(row, headers, "StudentNumber");
-        string birthDateText = GetColumnValue(row, headers, "BirthDate");
-        string address = GetColumnValue(row, headers, "Address");
-        string department = GetColumnValue(row, headers, "Department");
-        string academicYear = GetColumnValue(row, headers, "AcademicYear");
-        string previousDaysText = GetColumnValue(row, headers, "PreviousInternshipDays");
-        string email = GetColumnValue(row, headers, "Email");
-        string phoneNumber = GetColumnValue(row, headers, "PhoneNumber");
-        string healthAidStatusText = GetColumnValue(row, headers, "HealthAidStatus");
-        List<string> rowErrors = new List<string>();
+        string Value(string name) => columns.TryGetValue(name, out int index) && index < row.Length
+            ? row[index].Trim()
+            : "";
 
-        // Zorunlu alanların boş bırakılmadığını kontrol etme
-        if (string.IsNullOrWhiteSpace(fullName) ||
-            string.IsNullOrWhiteSpace(identityNumber) ||
-            string.IsNullOrWhiteSpace(nationality) ||
-            string.IsNullOrWhiteSpace(studentNumber) ||
-            string.IsNullOrWhiteSpace(birthDateText) ||
-            string.IsNullOrWhiteSpace(address) ||
-            string.IsNullOrWhiteSpace(department) ||
-            string.IsNullOrWhiteSpace(academicYear) ||
-            string.IsNullOrWhiteSpace(previousDaysText) ||
-            string.IsNullOrWhiteSpace(email) ||
-            string.IsNullOrWhiteSpace(phoneNumber) ||
-            string.IsNullOrWhiteSpace(healthAidStatusText))
-        {
+        string fullName = Value("FullName");
+        string identityNumber = Value("IdentityNumber");
+        string nationality = Value("Nationality");
+        string studentNumber = Value("StudentNumber");
+        string birthDateText = Value("BirthDate");
+        string address = Value("Address");
+        string department = Value("Department");
+        string academicYear = Value("AcademicYear");
+        string previousDaysText = Value("PreviousInternshipDays");
+        string email = Value("Email");
+        string phoneNumber = Value("PhoneNumber");
+        string healthAidText = Value("HealthAidStatus");
+        List<string> rowErrors = new();
+
+        if (new[] { fullName, identityNumber, nationality, studentNumber, birthDateText,
+                address, department, academicYear, previousDaysText, email, phoneNumber, healthAidText }
+            .Any(string.IsNullOrWhiteSpace))
             rowErrors.Add("zorunlu alanlardan biri bos");
-        }
 
-        // Doğum tarihini Türkçe veya genel tarih biçiminde okuma
-        DateTime birthDate = DateTime.MinValue;
-        if (DateTime.TryParse(
-                birthDateText,
-                CultureInfo.GetCultureInfo("tr-TR"),
-                DateTimeStyles.AllowWhiteSpaces,
-                out DateTime parsedBirthDate) == false &&
+        bool validBirthDate = DateTime.TryParse(
+            birthDateText, CultureInfo.GetCultureInfo("tr-TR"),
+            DateTimeStyles.AllowWhiteSpaces, out DateTime birthDate) ||
             DateTime.TryParse(
-                birthDateText,
-                CultureInfo.InvariantCulture,
-                DateTimeStyles.AllowWhiteSpaces,
-                out parsedBirthDate) == false)
-        {
+                birthDateText, CultureInfo.InvariantCulture,
+                DateTimeStyles.AllowWhiteSpaces, out birthDate);
+
+        if (!validBirthDate)
             rowErrors.Add("dogum tarihi gecersiz");
-        }
-        else
-        {
-            birthDate = parsedBirthDate.Date;
+        else if (birthDate.Date > DateTime.Today)
+            rowErrors.Add("dogum tarihi gelecekte olamaz");
 
-            if (birthDate > DateTime.Today)
-            {
-                rowErrors.Add("dogum tarihi gelecekte olamaz");
-            }
-        }
-
-        // Önceki staj gün sayısını sayısal değere dönüştürme
-        int previousInternshipDays = 0;
-        if (int.TryParse(
-                previousDaysText,
-                NumberStyles.Integer,
-                CultureInfo.InvariantCulture,
-                out int parsedDays) == false &&
+        bool validDays = int.TryParse(
+            previousDaysText, NumberStyles.Integer, CultureInfo.InvariantCulture, out int previousDays) ||
             int.TryParse(
-                previousDaysText,
-                NumberStyles.Integer,
-                CultureInfo.GetCultureInfo("tr-TR"),
-                out parsedDays) == false)
-        {
+                previousDaysText, NumberStyles.Integer,
+                CultureInfo.GetCultureInfo("tr-TR"), out previousDays);
+
+        if (!validDays)
             rowErrors.Add("onceki staj gun sayisi sayi olmalidir");
-        }
-        else if (parsedDays < 0)
-        {
+        else if (previousDays < 0)
             rowErrors.Add("onceki staj gun sayisi negatif olamaz");
-        }
-        else
-        {
-            previousInternshipDays = parsedDays;
-        }
 
-        // E-posta adresinin geçerli biçimde olup olmadığını kontrol etme
-        EmailAddressAttribute emailValidator = new EmailAddressAttribute();
-        if (emailValidator.IsValid(email) == false)
-        {
+        if (!new EmailAddressAttribute().IsValid(email))
             rowErrors.Add("e-posta adresi gecersiz");
-        }
 
-        // Sağlık yardımı değerini sistemdeki sayısal statüye dönüştürme
-        int healthAidStatus = ParseHealthAidStatus(healthAidStatusText);
-        if (healthAidStatus < 0)
+        bool validHealthStatus = int.TryParse(Normalize(healthAidText), out int healthAidStatus) &&
+            healthAidStatus is >= 1 and <= 6;
+        if (!validHealthStatus)
         {
-            string shownValue = healthAidStatusText.Length > 40
-                ? healthAidStatusText[..40] + "..."
-                : healthAidStatusText;
+            string shownValue = healthAidText.Length > 40
+                ? healthAidText[..40] + "..."
+                : healthAidText;
             rowErrors.Add($"saglik yardimi statusu '{shownValue}' gecersiz; 1-6 arasinda olmalidir");
         }
 
         if (rowErrors.Count > 0)
         {
-            // Satırdaki tüm hataları tek sonuç altında toplama
             errors.Add($"{rowNumber}. satir: {string.Join(", ", rowErrors)}.");
             return null;
         }
@@ -718,45 +354,43 @@ public class StudentDatasetImportService
             IdentityNumber = identityNumber,
             Nationality = nationality,
             StudentNumber = studentNumber,
-            BirthDate = birthDate,
+            BirthDate = birthDate.Date,
             Address = address,
             Department = department,
             AcademicYear = academicYear,
-            PreviousInternshipDays = previousInternshipDays,
+            PreviousInternshipDays = previousDays,
             Email = email,
             PhoneNumber = phoneNumber,
             HealthAidStatus = healthAidStatus
         };
     }
 
-    private static string GetColumnValue(
-        List<string> row,
-        Dictionary<string, int> headers,
-        string columnName)
+    private static string Normalize(string value)
     {
-        // Alanın hangi sütunda bulunduğunu başlık eşleşmesinden bulma
-        int index = requiredColumnAliases[columnName]
-            .Select(Normalize)
-            .Where(headers.ContainsKey)
-            .Select(alias => headers[alias])
-            .First();
+        string text = value.Trim().Trim('\uFEFF').ToLowerInvariant()
+            .Replace('ı', 'i').Replace('ğ', 'g').Replace('ş', 's')
+            .Replace('ç', 'c').Replace('ö', 'o').Replace('ü', 'u')
+            .Normalize(NormalizationForm.FormD);
 
-        return index < row.Count ? row[index].Trim() : "";
-    }
-
-    private static int ParseHealthAidStatus(string value)
-    {
-        // Ek-16 üzerindeki altı sağlık yardımı maddesini kabul etme
-        string normalizedValue = Normalize(value);
-
-        if (int.TryParse(normalizedValue, out int numericValue) && numericValue >= 1 && numericValue <= 6)
+        StringBuilder normalized = new();
+        foreach (char character in text)
         {
-            return numericValue;
+            if (CharUnicodeInfo.GetUnicodeCategory(character) == UnicodeCategory.NonSpacingMark)
+                continue;
+
+            normalized.Append(char.IsLetterOrDigit(character) ? character : ' ');
         }
 
-        return -1;
+        return string.Join(" ", normalized.ToString()
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries));
     }
 
+    private static char DetectDelimiter(string csvText)
+    {
+        string firstLine = csvText.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None)[0];
+        return firstLine.Count(character => character == ';') >
+               firstLine.Count(character => character == ',') ? ';' : ',';
+    }
     private static void ApplyRecord(TestStudent student, StudentDatasetImportRow record)
     {
         // CSV alanlarını test referansı modeline aktarma
@@ -774,110 +408,4 @@ public class StudentDatasetImportService
         student.HealthAidStatus = record.HealthAidStatus;
     }
 
-    private static string Normalize(string value)
-    {
-        // Türkçe karakterleri ve noktalama işaretlerini karşılaştırılabilir hale getirme
-        string decomposedValue = value
-            .Trim()
-            .Trim('\uFEFF')
-            .ToLowerInvariant()
-            .Replace('ı', 'i')
-            .Replace('ğ', 'g')
-            .Replace('ş', 's')
-            .Replace('ç', 'c')
-            .Replace('ö', 'o')
-            .Replace('ü', 'u')
-            .Normalize(NormalizationForm.FormD);
-        StringBuilder normalizedValue = new StringBuilder();
-
-        foreach (char character in decomposedValue)
-        {
-            if (CharUnicodeInfo.GetUnicodeCategory(character) == UnicodeCategory.NonSpacingMark)
-            {
-                continue;
-            }
-
-            normalizedValue.Append(char.IsLetterOrDigit(character) ? character : ' ');
-        }
-
-        return string.Join(" ", normalizedValue.ToString()
-            .Split(' ', StringSplitOptions.RemoveEmptyEntries));
-    }
-
-    private static char DetectDelimiter(string csvText)
-    {
-        // Başlık satırındaki ayraç sayısına göre CSV biçimini belirleme
-        string firstLine = csvText.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None)[0];
-        int commaCount = firstLine.Count(character => character == ',');
-        int semicolonCount = firstLine.Count(character => character == ';');
-
-        return semicolonCount > commaCount ? ';' : ',';
-    }
-
-    private static List<List<string>> ParseCsv(string csvText, char delimiter)
-    {
-        // Tırnak içindeki ayraçları ve satır sonlarını dikkate alarak CSV ayrıştırma
-        List<List<string>> rows = new List<List<string>>();
-        List<string> currentRow = new List<string>();
-        StringBuilder currentValue = new StringBuilder();
-        bool insideQuotes = false;
-
-        for (int index = 0; index < csvText.Length; index++)
-        {
-            char character = csvText[index];
-
-            if (insideQuotes)
-            {
-                if (character == '"' && index + 1 < csvText.Length && csvText[index + 1] == '"')
-                {
-                    currentValue.Append('"');
-                    index++;
-                }
-                else if (character == '"')
-                {
-                    insideQuotes = false;
-                }
-                else
-                {
-                    currentValue.Append(character);
-                }
-
-                continue;
-            }
-
-            if (character == '"')
-            {
-                insideQuotes = true;
-            }
-            else if (character == delimiter)
-            {
-                currentRow.Add(currentValue.ToString());
-                currentValue.Clear();
-            }
-            else if (character == '\r' || character == '\n')
-            {
-                if (character == '\r' && index + 1 < csvText.Length && csvText[index + 1] == '\n')
-                {
-                    index++;
-                }
-
-                currentRow.Add(currentValue.ToString());
-                currentValue.Clear();
-                rows.Add(currentRow);
-                currentRow = new List<string>();
-            }
-            else
-            {
-                currentValue.Append(character);
-            }
-        }
-
-        if (currentValue.Length > 0 || currentRow.Count > 0)
-        {
-            currentRow.Add(currentValue.ToString());
-            rows.Add(currentRow);
-        }
-
-        return rows;
-    }
 }

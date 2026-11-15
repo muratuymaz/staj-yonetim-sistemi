@@ -19,8 +19,10 @@ namespace StajYonetimSistemi.Controllers
         private readonly DocumentFieldComparisonService documentFieldComparisonService;
         private readonly ILogger<StudentController> logger;
 
+        //Yüklenmesine izin verilen en büyük dosya boyutu
         private const long MaxFileSize = 10 * 1024 * 1024;
 
+        // Controller'ın veritabanı, dosya ve belge işlemlerindeki gerekli servisler
         public StudentController(
             StajDbContext database,
             IWebHostEnvironment environment,
@@ -30,6 +32,7 @@ namespace StajYonetimSistemi.Controllers
             DocumentFieldComparisonService documentFieldComparisonService,
             ILogger<StudentController> logger)
         {
+            // Enjekte edilen bağımlılıkları controller içinde kullanmak için saklama
             this.database = database;
             this.environment = environment;
             this.fileValidator = fileValidator;
@@ -109,6 +112,7 @@ namespace StajYonetimSistemi.Controllers
                 .AsNoTracking()
                 .FirstOrDefaultAsync(item => item.DocumentId == document.Id, cancellationToken);
 
+            //Belgeden çıkarılan öğrenci numarasını doğrulama ve veritabanında arama
             string? extractedStudentNumber = string.IsNullOrWhiteSpace(readResult?.StudentNumber)
                 ? null
                 : readResult.StudentNumber.Trim();
@@ -140,6 +144,7 @@ namespace StajYonetimSistemi.Controllers
                 comparisons = documentFieldComparisonService.Compare(readResult, savedForm);
             }
 
+            // Belge ve referans öğrenci mevcutsa alanlarını birbirleriyle karşılaştırma
             List<FieldComparisonResult>? referenceComparisons = null;
             if (readResult != null && referenceStudent != null)
             {
@@ -148,6 +153,7 @@ namespace StajYonetimSistemi.Controllers
                     referenceStudent);
             }
 
+            // Belge bilgilerini ve iki karşılaştırmanın sonuçlarını istemciye JSON olarak döndürme
             return Json(new
             {
                 hasDocument = true,
@@ -334,14 +340,14 @@ namespace StajYonetimSistemi.Controllers
                 documentsDirectory, $".{Guid.NewGuid():N}.uploading");
             string finalPath = Path.Combine(documentsDirectory, storedFileName);
 
-            // Veritabanında Windows/Mac'e özgü mutlak yol yerine taşınabilir göreli yol tutuyoruz.
+            // Veritabanında Windows/Mac'e özgü mutlak yol yerine taşınabilir yol tutma
             string relativePath = $"Uploads/Documents/{storedFileName}";
 
             try
             {
                 Directory.CreateDirectory(documentsDirectory);
 
-                // Önce geçici dosyaya tam yaz; yarım yükleme nihai dosya adıyla görünmesin.
+                // Önce geçici dosyaya tam yaz, yarım yükleme nihai dosya adıyla görünmesin.
                 await using (FileStream output = new(
                     temporaryPath,
                     FileMode.CreateNew,
@@ -441,6 +447,7 @@ namespace StajYonetimSistemi.Controllers
             document.Status = "Reviewing";
             await database.SaveChangesAsync(cancellationToken);
 
+            // Desteklenen belge türlerinden metni okuyup EK-16 alanlarını çıkarma ve form bilgileriyle karşılaştırma
             string extractedText = "";
             string? extractionWarning = null;
             DocumentReadResult? extractedFields = null;
@@ -480,6 +487,7 @@ namespace StajYonetimSistemi.Controllers
                 }
             }
 
+            // Kayıt, belge durumu, çıkarılan alanlar ve varsa okuma uyarısını istemciye döndürme
             return Ok(new
             {
                 message = "Öğrenci bilgileri ve Ek-16 dosyası birlikte kaydedildi.",
@@ -513,6 +521,7 @@ namespace StajYonetimSistemi.Controllers
             };
         }
 
+        //Yükleme artığını silmeyi deneme ve silme hatasını kaydetme
         private void TryDeleteUploadFile(string path)
         {
             try

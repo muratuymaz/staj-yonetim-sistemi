@@ -158,6 +158,7 @@ if (profileForm && profileFormMessage) {
                 }
             });
 
+            // Sunucu yanıtını metin olarak alıp JSON ise ayrıştırma
             const responseBody = await response.text();
             let result = null;
 

@@ -86,6 +86,7 @@ public sealed class DocumentFieldComparisonService
         return results;
     }
 
+    // Belgedeki metin değerini formdaki değerle karşılaştırma
     private static FieldComparisonResult CompareText(
         string fieldName,
         string? documentValue,
@@ -96,6 +97,7 @@ public sealed class DocumentFieldComparisonService
         return CompareValues(fieldName, documentValue, formValue, firstValue, secondValue);
     }
 
+    // Belge ve formdaki değerleri rakam biçimine göre normalize edip karşılaştırma
     private static FieldComparisonResult CompareDigits(
         string fieldName,
         string? documentValue,
@@ -106,6 +108,7 @@ public sealed class DocumentFieldComparisonService
         return CompareValues(fieldName, documentValue, formValue, firstValue, secondValue);
     }
 
+    // Belgedeki uyruk bilgisini referans değerle karşılaştırma
     private static FieldComparisonResult CompareNationality(
         string fieldName,
         string? documentValue,
@@ -116,6 +119,7 @@ public sealed class DocumentFieldComparisonService
         return CompareValues(fieldName, documentValue, referenceValue, firstValue, secondValue);
     }
 
+    // Belgedeki e-posta adresini formdaki adresle normalize ederek karşılaştırma
     private static FieldComparisonResult CompareEmail(
         string fieldName,
         string? documentValue,
@@ -126,6 +130,7 @@ public sealed class DocumentFieldComparisonService
         return CompareValues(fieldName, documentValue, formValue, firstValue, secondValue);
     }
 
+    // Belgedeki telefon numarasını formdaki numarayla normalize ederek karşılaştırma
     private static FieldComparisonResult ComparePhone(
         string fieldName,
         string? documentValue,
@@ -136,6 +141,7 @@ public sealed class DocumentFieldComparisonService
         return CompareValues(fieldName, documentValue, formValue, firstValue, secondValue);
     }
 
+    // Belgeden ve formdan gelen tarihleri aynı biçime dönüştürüp karşılaştırma
     private static FieldComparisonResult CompareDate(
         string fieldName,
         DateTime? documentValue,
@@ -158,6 +164,7 @@ public sealed class DocumentFieldComparisonService
             NormalizeText(documentText), NormalizeText(formText));
     }
 
+    // Belgeden çıkarılan sayısal değeri formdaki değerle normalize ederek karşılaştırma
     private static FieldComparisonResult CompareNumber(
         string fieldName,
         int? documentValue,

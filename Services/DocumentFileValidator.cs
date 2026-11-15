@@ -6,7 +6,7 @@ using UglyToad.PdfPig;
 
 namespace StajYonetimSistemi.Services;
 
-/// <summary>Validates allowed Ek-16 file types before they are written to disk.</summary>
+// Yüklenen belgelerin boyut, tür ve geçerlilik kontrollerini yapan servis
 public sealed class DocumentFileValidator(ILogger<DocumentFileValidator> logger)
 {
     private const long MaxFileSize = 10 * 1024 * 1024;
@@ -19,6 +19,7 @@ public sealed class DocumentFileValidator(ILogger<DocumentFileValidator> logger)
             ".doc", ".docx", ".pdf", ".jpg", ".jpeg", ".png"
         };
 
+    // Yüklenen dosyanın boyutunu, türünü ve okunabilirliğini kontrol etme
     public async Task<string?> ValidateAsync(
         IFormFile file,
         CancellationToken cancellationToken = default)
@@ -68,6 +69,7 @@ public sealed class DocumentFileValidator(ILogger<DocumentFileValidator> logger)
         }
     }
 
+    // Dosyanın başlangıç baytlarını uzantısına ait imzayla karşılaştırma
     private static async Task<bool> HasMatchingSignatureAsync(
         IFormFile file,
         string extension,
@@ -108,6 +110,7 @@ public sealed class DocumentFileValidator(ILogger<DocumentFileValidator> logger)
                header.AsSpan(0, expected.Length).SequenceEqual(expected);
     }
 
+    // DOCX dosyasını açıp ana belge gövdesinin bulunup bulunmadığını kontrol etme
     private static bool IsReadableDocx(IFormFile file)
     {
         // Open XML paketi açıp ana belge gövdesini ayrıştırıyoruz.
@@ -124,6 +127,7 @@ public sealed class DocumentFileValidator(ILogger<DocumentFileValidator> logger)
         return true;
     }
 
+    // Eski DOC dosyasının Word başlığını ve gerekli iç akışlarını kontrol etme
     private static bool IsReadableLegacyWord(IFormFile file)
     {
         // OLE imzası Excel/PowerPoint gibi başka biçimlerde de bulunduğundan,
@@ -143,6 +147,7 @@ public sealed class DocumentFileValidator(ILogger<DocumentFileValidator> logger)
         return hasWordIdentifier && HasCompoundStream(root, "0Table", "1Table");
     }
 
+    // Eski Word dosyasında belirtilen akışlardan en az birinin boş olmadığını kontrol etme
     private static bool HasCompoundStream(RootStorage root, string first, string second)
     {
         if (root.TryOpenStream(first, out CfbStream? firstTable) && firstTable is not null)
@@ -160,6 +165,7 @@ public sealed class DocumentFileValidator(ILogger<DocumentFileValidator> logger)
         return false;
     }
 
+    // PDF dosyasının açılıp sayfa yapısının okunabildiğini kontrol etme
     private static bool IsReadablePdf(IFormFile file)
     {
         // PDF okuyucuyla sayfa yapısını ayrıştır; metin olmaması geçerli PDF'yi reddetmez.
@@ -172,6 +178,7 @@ public sealed class DocumentFileValidator(ILogger<DocumentFileValidator> logger)
         return document.NumberOfPages > 0;
     }
 
+    // Görsel dosyasını asenkron olarak açıp okunabilirliğini kontrol etme
     private static Task<bool> IsReadableImageAsync(
         IFormFile file,
         CancellationToken cancellationToken)

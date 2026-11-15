@@ -13,22 +13,29 @@ public sealed class DocumentFileValidator(ILogger<DocumentFileValidator> logger)
     private static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase)
         { ".doc", ".docx", ".pdf", ".jpg", ".jpeg", ".png" };
 
+    // Dosyanın boyutunu, türünü ve açılabilirliğini kontrol etme
     public async Task<string?> ValidateAsync(
         IFormFile file,
         CancellationToken cancellationToken = default)
     {
         if (file.Length <= 0 || file.Length > MaxFileSize)
+        {
             return "Dosya boş olamaz ve en fazla 10 MB olabilir.";
+        }
 
         string extension = Path.GetExtension(file.FileName);
         if (!AllowedExtensions.Contains(extension))
+        {
             return "Yalnızca DOC, DOCX, PDF, JPEG ve PNG dosyaları yüklenebilir.";
+        }
 
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (!await HasMatchingSignatureAsync(file, extension, cancellationToken))
+            {
                 return InvalidFileMessage;
+            }
 
             bool isReadable = extension.ToLowerInvariant() switch
             {
@@ -39,7 +46,12 @@ public sealed class DocumentFileValidator(ILogger<DocumentFileValidator> logger)
                 _ => false
             };
 
-            return isReadable ? null : InvalidFileMessage;
+            if (isReadable)
+            {
+                return null;
+            }
+
+            return InvalidFileMessage;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -52,6 +64,7 @@ public sealed class DocumentFileValidator(ILogger<DocumentFileValidator> logger)
         }
     }
 
+    // Dosya başlığının uzantıyla uyuşup uyuşmadığını kontrol etme
     private static async Task<bool> HasMatchingSignatureAsync(
         IFormFile file,
         string extension,
@@ -65,7 +78,10 @@ public sealed class DocumentFileValidator(ILogger<DocumentFileValidator> logger)
             while (totalRead < header.Length)
             {
                 int read = await stream.ReadAsync(header.AsMemory(totalRead), cancellationToken);
-                if (read == 0) break;
+                if (read == 0)
+                {
+                    break;
+                }
                 totalRead += read;
             }
         }
@@ -84,17 +100,22 @@ public sealed class DocumentFileValidator(ILogger<DocumentFileValidator> logger)
                header.AsSpan(0, expected.Length).SequenceEqual(expected);
     }
 
+    // DOCX belgesinin açılıp açılmadığını kontrol etme
     private static bool IsReadableDocx(IFormFile file)
     {
         using Stream stream = file.OpenReadStream();
         using WordprocessingDocument document = WordprocessingDocument.Open(stream, false);
         var body = document.MainDocumentPart?.Document?.Body;
-        if (body is null) return false;
+        if (body is null)
+        {
+            return false;
+        }
 
         _ = body.Elements<DocumentFormat.OpenXml.Wordprocessing.Paragraph>().ToList();
         return true;
     }
 
+    // Eski Word belgesinin iç yapısını kontrol etme
     private static bool IsReadableLegacyWord(IFormFile file)
     {
         using Stream stream = file.OpenReadStream();
@@ -123,19 +144,35 @@ public sealed class DocumentFileValidator(ILogger<DocumentFileValidator> logger)
         return false;
     }
 
+    // PDF dosyasının sayfalarını okuyabildiğini kontrol etme
     private static bool IsReadablePdf(IFormFile file)
     {
         using Stream stream = file.OpenReadStream();
         using PdfDocument document = PdfDocument.Open(stream);
-        foreach (var page in document.GetPages()) _ = page.Text;
+        foreach (var page in document.GetPages())
+        {
+            _ = page.Text;
+        }
         return document.NumberOfPages > 0;
     }
 
+    // Görsel dosyasının açılıp açılmadığını kontrol etme
     private static bool IsReadableImage(IFormFile file, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         using Stream stream = file.OpenReadStream();
         using SKBitmap? bitmap = SKBitmap.Decode(stream);
-        return bitmap is { Width: > 0, Height: > 0 };
+
+        if (bitmap == null)
+        {
+            return false;
+        }
+
+        if (bitmap.Width <= 0 || bitmap.Height <= 0)
+        {
+            return false;
+        }
+
+        return true;
     }
 }

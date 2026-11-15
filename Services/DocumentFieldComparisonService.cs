@@ -6,6 +6,7 @@ namespace StajYonetimSistemi.Services;
 
 public sealed class DocumentFieldComparisonService
 {
+    // Belgeden okunan bilgileri öğrenci formuyla karşılaştırma
     public List<FieldComparisonResult> Compare(
         DocumentReadResult document,
         StudentProfileForm form)
@@ -20,6 +21,7 @@ public sealed class DocumentFieldComparisonService
         return results;
     }
 
+    // Belge bilgilerini test veri setindeki kayıtla karşılaştırma
     public List<FieldComparisonResult> CompareWithReference(
         DocumentReadResult document,
         TestStudent reference)
@@ -29,6 +31,7 @@ public sealed class DocumentFieldComparisonService
         return CompareReferenceFields(ToProfile(document), ToProfile(reference));
     }
 
+    // Öğrenci bilgilerini test veri setindeki kayıtla karşılaştırma
     public List<FieldComparisonResult> CompareStudentWithReference(
         Student student,
         TestStudent reference)
@@ -40,8 +43,10 @@ public sealed class DocumentFieldComparisonService
 
     private static List<FieldComparisonResult> CompareDocumentFields(
         ComparisonProfile left,
-        ComparisonProfile right) =>
-    [
+        ComparisonProfile right)
+    {
+        return new List<FieldComparisonResult>
+        {
         CompareText("FullName", left.FullName, right.FullName),
         CompareDigits("IdentityNumber", left.IdentityNumber, right.IdentityNumber),
         CompareNationality("Nationality", left.Nationality, right.Nationality),
@@ -54,12 +59,15 @@ public sealed class DocumentFieldComparisonService
         CompareEmail("Email", left.Email, right.Email),
         ComparePhone("PhoneNumber", left.PhoneNumber, right.PhoneNumber),
         CompareNumber("HealthAidStatus", left.HealthAidStatus, right.HealthAidStatus)
-    ];
+        };
+    }
 
     private static List<FieldComparisonResult> CompareReferenceFields(
         ComparisonProfile left,
-        ComparisonProfile right) =>
-    [
+        ComparisonProfile right)
+    {
+        return new List<FieldComparisonResult>
+        {
         CompareText("FullName", left.FullName, right.FullName),
         CompareDigits("IdentityNumber", left.IdentityNumber, right.IdentityNumber),
         CompareNationality("Nationality", left.Nationality, right.Nationality),
@@ -72,49 +80,119 @@ public sealed class DocumentFieldComparisonService
         CompareEmail("Email", left.Email, right.Email),
         ComparePhone("PhoneNumber", left.PhoneNumber, right.PhoneNumber),
         CompareNumber("HealthAidStatus", left.HealthAidStatus, right.HealthAidStatus)
-    ];
+        };
+    }
 
-    private static ComparisonProfile ToProfile(DocumentReadResult value) => new(
-        value.FullName, value.IdentityNumber, value.Nationality, value.BirthDate,
-        value.StudentNumber, value.Address, value.Department, value.AcademicYear,
-        value.PreviousInternshipDays, value.Email, value.PhoneNumber, value.HealthAidStatus);
+    // Farklı modellerdeki ortak alanları karşılaştırma için hazırlama
+    private static ComparisonProfile ToProfile(DocumentReadResult value)
+    {
+        return new ComparisonProfile
+        {
+            FullName = value.FullName,
+            IdentityNumber = value.IdentityNumber,
+            Nationality = value.Nationality,
+            BirthDate = value.BirthDate,
+            StudentNumber = value.StudentNumber,
+            Address = value.Address,
+            Department = value.Department,
+            AcademicYear = value.AcademicYear,
+            PreviousInternshipDays = value.PreviousInternshipDays,
+            Email = value.Email,
+            PhoneNumber = value.PhoneNumber,
+            HealthAidStatus = value.HealthAidStatus
+        };
+    }
 
-    private static ComparisonProfile ToProfile(StudentProfileForm value) => new(
-        value.FullName, value.IdentityNumber, value.Nationality, value.BirthDate,
-        value.StudentNumber, value.Address, value.Department, value.AcademicYear,
-        value.PreviousInternshipDays, value.Email, value.PhoneNumber, value.HealthAidStatus);
+    private static ComparisonProfile ToProfile(StudentProfileForm value)
+    {
+        return new ComparisonProfile
+        {
+            FullName = value.FullName,
+            IdentityNumber = value.IdentityNumber,
+            Nationality = value.Nationality,
+            BirthDate = value.BirthDate,
+            StudentNumber = value.StudentNumber,
+            Address = value.Address,
+            Department = value.Department,
+            AcademicYear = value.AcademicYear,
+            PreviousInternshipDays = value.PreviousInternshipDays,
+            Email = value.Email,
+            PhoneNumber = value.PhoneNumber,
+            HealthAidStatus = value.HealthAidStatus
+        };
+    }
 
-    private static ComparisonProfile ToProfile(Student value) => new(
-        value.FullName, value.IdentityNumber, value.Nationality, value.BirthDate,
-        value.StudentNumber, value.Address, value.Department, value.AcademicYear,
-        value.PreviousInternshipDays, value.Email, value.PhoneNumber, value.HealthAidStatus);
+    private static ComparisonProfile ToProfile(Student value)
+    {
+        return new ComparisonProfile
+        {
+            FullName = value.FullName,
+            IdentityNumber = value.IdentityNumber,
+            Nationality = value.Nationality,
+            BirthDate = value.BirthDate,
+            StudentNumber = value.StudentNumber,
+            Address = value.Address,
+            Department = value.Department,
+            AcademicYear = value.AcademicYear,
+            PreviousInternshipDays = value.PreviousInternshipDays,
+            Email = value.Email,
+            PhoneNumber = value.PhoneNumber,
+            HealthAidStatus = value.HealthAidStatus
+        };
+    }
 
-    private static ComparisonProfile ToProfile(TestStudent value) => new(
-        value.FullName, value.IdentityNumber, value.Nationality, value.BirthDate,
-        value.StudentNumber, value.Address, value.Department, value.AcademicYear,
-        value.PreviousInternshipDays, value.Email, value.PhoneNumber, value.HealthAidStatus);
+    private static ComparisonProfile ToProfile(TestStudent value)
+    {
+        return new ComparisonProfile
+        {
+            FullName = value.FullName,
+            IdentityNumber = value.IdentityNumber,
+            Nationality = value.Nationality,
+            BirthDate = value.BirthDate,
+            StudentNumber = value.StudentNumber,
+            Address = value.Address,
+            Department = value.Department,
+            AcademicYear = value.AcademicYear,
+            PreviousInternshipDays = value.PreviousInternshipDays,
+            Email = value.Email,
+            PhoneNumber = value.PhoneNumber,
+            HealthAidStatus = value.HealthAidStatus
+        };
+    }
 
-    private static FieldComparisonResult CompareText(string field, string? left, string? right) =>
-        CompareString(field, left, right, NormalizeText);
+    private static FieldComparisonResult CompareText(string field, string? left, string? right)
+    {
+        return CompareString(field, left, right, NormalizeText);
+    }
 
-    private static FieldComparisonResult CompareDigits(string field, string? left, string? right) =>
-        CompareString(field, left, right, NormalizeDigits);
+    private static FieldComparisonResult CompareDigits(string field, string? left, string? right)
+    {
+        return CompareString(field, left, right, NormalizeDigits);
+    }
 
-    private static FieldComparisonResult CompareNationality(string field, string? left, string? right) =>
-        CompareString(field, left, right, NormalizeNationality);
+    private static FieldComparisonResult CompareNationality(string field, string? left, string? right)
+    {
+        return CompareString(field, left, right, NormalizeNationality);
+    }
 
-    private static FieldComparisonResult CompareEmail(string field, string? left, string? right) =>
-        CompareString(field, left, right, NormalizeEmail);
+    private static FieldComparisonResult CompareEmail(string field, string? left, string? right)
+    {
+        return CompareString(field, left, right, NormalizeEmail);
+    }
 
-    private static FieldComparisonResult ComparePhone(string field, string? left, string? right) =>
-        CompareString(field, left, right, NormalizePhone);
+    private static FieldComparisonResult ComparePhone(string field, string? left, string? right)
+    {
+        return CompareString(field, left, right, NormalizePhone);
+    }
 
     private static FieldComparisonResult CompareString(
         string field,
         string? left,
         string? right,
-        Func<string?, string> normalize) =>
-        CompareValues(field, left, right, normalize(left), normalize(right));
+        Func<string?, string> normalize)
+    {
+        return CompareValues(field, left, right, normalize(left), normalize(right));
+    }
 
     private static FieldComparisonResult CompareDate(
         string field,
@@ -122,9 +200,11 @@ public sealed class DocumentFieldComparisonService
         DateTime? right)
     {
         string? leftText = left?.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture);
-        string? rightText = right.HasValue && right.Value != DateTime.MinValue
-            ? right.Value.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture)
-            : null;
+        string? rightText = null;
+        if (right.HasValue && right.Value != DateTime.MinValue)
+        {
+            rightText = right.Value.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture);
+        }
 
         return CompareValues(field, leftText, rightText,
             NormalizeText(leftText), NormalizeText(rightText));
@@ -142,6 +222,7 @@ public sealed class DocumentFieldComparisonService
             NormalizeNumber(leftText), NormalizeNumber(rightText));
     }
 
+    // Eksik veya eşleşmeyen alanın sonucunu belirleme
     private static FieldComparisonResult CompareValues(
         string field,
         string? left,
@@ -149,13 +230,23 @@ public sealed class DocumentFieldComparisonService
         string normalizedLeft,
         string normalizedRight)
     {
-        string status = string.IsNullOrWhiteSpace(left)
-            ? FieldComparisonStatus.Unreadable
-            : string.IsNullOrWhiteSpace(right)
-                ? FieldComparisonStatus.FormValueMissing
-                : normalizedLeft == normalizedRight
-                    ? FieldComparisonStatus.Match
-                    : FieldComparisonStatus.Mismatch;
+        string status;
+        if (string.IsNullOrWhiteSpace(left))
+        {
+            status = FieldComparisonStatus.Unreadable;
+        }
+        else if (string.IsNullOrWhiteSpace(right))
+        {
+            status = FieldComparisonStatus.FormValueMissing;
+        }
+        else if (normalizedLeft == normalizedRight)
+        {
+            status = FieldComparisonStatus.Match;
+        }
+        else
+        {
+            status = FieldComparisonStatus.Mismatch;
+        }
 
         return new FieldComparisonResult
         {
@@ -166,16 +257,22 @@ public sealed class DocumentFieldComparisonService
         };
     }
 
-    private static string NormalizeText(string? value) =>
-        Regex.Replace(value ?? "", @"\s+", " ")
+    private static string NormalizeText(string? value)
+    {
+        return Regex.Replace(value ?? "", @"\s+", " ")
             .Trim()
             .ToUpper(CultureInfo.GetCultureInfo("tr-TR"));
+    }
 
-    private static string NormalizeDigits(string? value) =>
-        Regex.Replace(value ?? "", @"\D", "");
+    private static string NormalizeDigits(string? value)
+    {
+        return Regex.Replace(value ?? "", @"\D", "");
+    }
 
-    private static string NormalizeEmail(string? value) =>
-        (value ?? "").Trim().ToUpperInvariant();
+    private static string NormalizeEmail(string? value)
+    {
+        return (value ?? "").Trim().ToUpperInvariant();
+    }
 
     private static string NormalizeNationality(string? value)
     {
@@ -189,6 +286,7 @@ public sealed class DocumentFieldComparisonService
         };
     }
 
+    // Telefon numaralarını karşılaştırma için aynı biçime getirme
     private static string NormalizePhone(string? value)
     {
         string digits = NormalizeDigits(value);
@@ -201,22 +299,30 @@ public sealed class DocumentFieldComparisonService
         };
     }
 
-    private static string NormalizeNumber(string? value) =>
-        int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int number)
-            ? number.ToString(CultureInfo.InvariantCulture)
-            : "";
+    private static string NormalizeNumber(string? value)
+    {
+        if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int number))
+        {
+            return number.ToString(CultureInfo.InvariantCulture);
+        }
 
-    private sealed record ComparisonProfile(
-        string? FullName,
-        string? IdentityNumber,
-        string? Nationality,
-        DateTime? BirthDate,
-        string? StudentNumber,
-        string? Address,
-        string? Department,
-        string? AcademicYear,
-        int? PreviousInternshipDays,
-        string? Email,
-        string? PhoneNumber,
-        int? HealthAidStatus);
+        return "";
+    }
+
+    // Karşılaştırılacak ortak öğrenci bilgilerini tutma
+    private class ComparisonProfile
+    {
+        public string? FullName { get; set; }
+        public string? IdentityNumber { get; set; }
+        public string? Nationality { get; set; }
+        public DateTime? BirthDate { get; set; }
+        public string? StudentNumber { get; set; }
+        public string? Address { get; set; }
+        public string? Department { get; set; }
+        public string? AcademicYear { get; set; }
+        public int? PreviousInternshipDays { get; set; }
+        public string? Email { get; set; }
+        public string? PhoneNumber { get; set; }
+        public int? HealthAidStatus { get; set; }
+    }
 }

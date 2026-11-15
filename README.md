@@ -14,6 +14,49 @@
 - ASP.NET Core MVC
 - Entity Framework Core ve SQLite
 - DOCX okumak için Open XML, PDF okumak için PdfPig
+- HTML, CSS ve JavaScript
+
+## Proje yapısı
+
+```text
+Controllers/       Sayfa ve istek işlemleri
+Data/              Veritabanı bağlantısı ve migration dosyaları
+Filters/           Oturum ve rol kontrolleri
+Models/            Kullanıcı, öğrenci ve belge modelleri
+Services/          Belge okuma, karşılaştırma ve diğer işlemler
+Views/             HTML içeren Razor sayfaları
+wwwroot/           CSS ve JavaScript dosyaları
+Database/          Yerel SQLite veritabanı
+Uploads/Documents/ Yüklenen belgeler
+```
+
+`Database` klasörü kurulumda oluşturulur, `Uploads/Documents` klasörü belge yüklenirken oluşturulur.
+
+## Nesne yönelimli programlama
+
+Projede nesne yönelimli programlamanın dört temel prensibinden yararlanılmıştır:
+
+### Kalıtım
+
+`Models/Student.cs` içindeki `Student` sınıfı, `User` sınıfından türetilmiştir. Böylece öğrenci, `User` içinde tanımlanan kullanıcı adı, e-posta, şifre hash'i ve rol gibi hesap bilgilerini kullanır. Öğrenci numarası, ad soyad ve bölüm gibi ek bilgiler `Student` sınıfında tutulur. `Data/StajDbContext.cs` içinde ortak kullanıcı bilgileri ve öğrenciye özel bilgiler ayrı tablolara eşlenmiştir.
+
+`Services/DocumentReaders.cs` dosyasında `PdfDocumentReader` ve `WordDocumentReader` sınıfları da ortak `DocumentReader` sınıfından türetilmiştir.
+
+### Kapsülleme
+
+`Models/User.cs` içinde hatalı giriş sayısı ve hesap kilidi özel alanlarda tutulur. `FailedLoginCount` ve `IsLocked` özellikleri dışarıdan okunabilir, ancak `private set` kullanıldığı için dışarıdan doğrudan değiştirilemez.
+
+`RegisterFailedLogin()` metodu hatalı giriş sayısını artırır ve sayı beşe ulaştığında hesabı kilitler. `ResetFailedLoginCount()` metodu başarılı girişte sayacı sıfırlar. Bu metotlar `Controllers/AccountController.cs` içindeki giriş işleminde kullanılır.
+
+### Soyutlama
+
+`Services/DocumentReaders.cs` içindeki soyut `DocumentReader` sınıfı, belge okuyucuları için `ReadText` adlı ortak işlemi tanımlar. İşlemin içeriği bu sınıfta yazılmaz, PDF ve Word dosyalarının nasıl okunacağı ilgili okuyucu sınıflarında belirlenir.
+
+### Çok biçimlilik
+
+`PdfDocumentReader` ve `WordDocumentReader`, ortak `ReadText` işlemini kendi dosya türlerine göre uygular. PDF okuyucu metni PdfPig ile, Word okuyucu ise DOCX içeriğini Open XML ile okur.
+
+`Services/DocumentReaderService.cs`, dosya uzantısına göre uygun okuyucuyu seçer ve `ReadText` işlemini ortak `DocumentReader` türü üzerinden çağırır. Bu servis, `Controllers/StudentController.cs` içinde yüklenen belgenin metnini okumak için kullanılır.
 
 ## Kurulum ve çalıştırma
 

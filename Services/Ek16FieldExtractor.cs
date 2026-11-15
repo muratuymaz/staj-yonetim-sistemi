@@ -4,194 +4,143 @@ using StajYonetimSistemi.Models;
 
 namespace StajYonetimSistemi.Services;
 
-// Ek-16 metnindeki bilgileri okuma
 public sealed class Ek16FieldExtractor
 {
-    // Alanların başlangıç ve bitiş başlıklarını tutma
-    private static readonly string[] Labels = new string[]
-    {
+    private static readonly string[] Labels =
+    [
         "T.C. KİMLİK NO / UYRUĞU", "T.C. KİMLİK NO/UYRUĞU", "ADI SOYADI",
         "DOĞUM TARİHİ", "ÖĞRENCİ NUMARASI", "BÖLÜMÜ",
         "DAHA ÖNCE YAPTIĞI STAJ GÜN SAYISI", "ÖĞRETİM YILI",
         "E-POSTA ADRESİ / TELEFON NO", "E-POSTA ADRESİ/TELEFON NO",
         "İKAMETGÂH ADRESİ", "SAĞLIK YARDIM STATÜSÜ",
         "STAJ BAŞLAMA TARİHİ", "STAJ BİTİŞ TARİHİ", "STAJ GÜN SAYISI",
-        "STAJ YAPILAN YER", "İŞVEREN VEYA YETKİLİNİN",
-        "TELEFON NO", "FAX NO", "E-POSTA ADRESİ", "WEB ADRESİ",
-        "HAFTA SONU", "ÇALIŞAN SAYISI", "MÜHENDİS SAYISI", "ÜCRET ALIYOR"
-    };
+        "STAJ YAPILAN YER", "İŞVEREN VEYA YETKİLİNİN", "TELEFON NO",
+        "FAX NO", "E-POSTA ADRESİ", "WEB ADRESİ", "HAFTA SONU",
+        "ÇALIŞAN SAYISI", "MÜHENDİS SAYISI", "ÜCRET ALIYOR"
+    ];
+
+    private static readonly string[] DateFormats =
+        ["d.M.yyyy", "dd.MM.yyyy", "d/M/yyyy", "dd/MM/yyyy", "yyyy-MM-dd"];
+    private static readonly CultureInfo TurkishCulture = CultureInfo.GetCultureInfo("tr-TR");
 
     public DocumentReadResult Extract(string text, int documentId)
     {
         ArgumentNullException.ThrowIfNull(text);
+        string normalizedText = NormalizeDocumentText(text);
 
-        DocumentReadResult result = new DocumentReadResult();
-        result.DocumentId = documentId;
-
-        // Öğrencinin adını belgeden okuma
-        result.FullName = ReadValue(text, "ADI SOYADI");
-
-        // Kimlik numarasını ve uyruk bilgisini belirleme
-        string identityAndNationality = ReadValue(
-            text, "T.C. KİMLİK NO / UYRUĞU", "T.C. KİMLİK NO/UYRUĞU");
-        Match identityMatch = Regex.Match(identityAndNationality, @"(?<!\d)\d{11}(?!\d)");
-        if (identityMatch.Success)
+        var result = new DocumentReadResult
         {
-            result.IdentityNumber = identityMatch.Value;
-        }
+            DocumentId = documentId,
+            FullName = ReadValue(normalizedText, "ADI SOYADI"),
+            StudentNumber = ReadValue(normalizedText, "ÖĞRENCİ NUMARASI"),
+            Department = ReadValue(normalizedText, "BÖLÜMÜ"),
+            Address = ReadValue(normalizedText, "İKAMETGÂH ADRESİ", "İKAMETGAH ADRESİ"),
+            AcademicYear = ReadValue(normalizedText, "ÖĞRETİM YILI"),
+            BirthDate = ReadDate(normalizedText, "DOĞUM TARİHİ"),
+            InternshipStartDate = ReadDate(normalizedText, "STAJ BAŞLAMA TARİHİ"),
+            InternshipEndDate = ReadDate(normalizedText, "STAJ BİTİŞ TARİHİ")
+        };
 
-        if (identityAndNationality.Contains("yabancı", StringComparison.OrdinalIgnoreCase))
-        {
-            result.Nationality = "Foreign";
-        }
-        else if (identityMatch.Success && identityMatch.Value.StartsWith("99"))
-        {
-            // 99 ile başlayan kimlik numarasından yabancı uyruk çıkarsama
-            result.Nationality = "Foreign";
-        }
-        else if (identityAndNationality.Contains("T.C.", StringComparison.OrdinalIgnoreCase) ||
-                 identityMatch.Success)
-        {
-            result.Nationality = "TC";
-        }
-
-        // Diğer öğrenci bilgilerini okuma
-        result.StudentNumber = ReadValue(text, "ÖĞRENCİ NUMARASI");
-        result.Department = ReadValue(text, "BÖLÜMÜ");
-        result.Address = ReadValue(text, "İKAMETGÂH ADRESİ", "İKAMETGAH ADRESİ");
-        result.AcademicYear = ReadValue(text, "ÖĞRETİM YILI");
-
-        // Daha önce yapılan staj gün sayısını okuma
-        string previousDays = ReadValue(text, "DAHA ÖNCE YAPTIĞI STAJ GÜN SAYISI");
-        if (int.TryParse(previousDays, NumberStyles.Integer, TurkishCulture,
-                out int previousInternshipDays))
-        {
-            result.PreviousInternshipDays = previousInternshipDays;
-        }
-
-        // Aynı alandaki e-posta ve telefon bilgisini ayırma
-        string emailAndPhone = ReadValue(
-            text, "E-POSTA ADRESİ / TELEFON NO", "E-POSTA ADRESİ/TELEFON NO");
-        Match emailMatch = Regex.Match(emailAndPhone, @"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}");
-        if (emailMatch.Success)
-        {
-            result.Email = emailMatch.Value;
-        }
-
-        Match phoneMatch = Regex.Match(emailAndPhone, @"(?:\+?90\s*)?0?\d[\d\s()/-]{8,15}");
-        if (phoneMatch.Success)
-        {
-            result.PhoneNumber = Regex.Replace(phoneMatch.Value, @"\s+", " ").Trim();
-        }
-
-        // Doğum ve staj tarihlerini okuma
-        result.BirthDate = ReadDate(text, "DOĞUM TARİHİ");
-        result.InternshipStartDate = ReadDate(text, "STAJ BAŞLAMA TARİHİ");
-        result.InternshipEndDate = ReadDate(text, "STAJ BİTİŞ TARİHİ");
-
-        // Bu staj için belirtilen toplam gün sayısını okuma
-        string internshipDayCount = ReadValue(text, "STAJ GÜN SAYISI");
-        if (int.TryParse(internshipDayCount, NumberStyles.Integer, CultureInfo.InvariantCulture,
-                out int parsedInternshipDayCount))
-        {
-            result.InternshipDayCount = parsedInternshipDayCount;
-        }
-
-        // Yalnızca tek bir işaretli seçenek okunabiliyorsa sağlık durumunu kaydetme
-        string healthSection = ReadValue(text, "SAĞLIK YARDIM STATÜSÜ");
-        MatchCollection selectedOptions = Regex.Matches(healthSection, @"(?<!\d)([1-6])\s*[-.)]?\s*[☒☑✓✔]");
-        if (selectedOptions.Count == 1)
-        {
-            result.HealthAidStatus = int.Parse(selectedOptions[0].Groups[1].Value);
-        }
-
+        ReadIdentityAndNationality(normalizedText, result);
+        ReadInternshipCounts(normalizedText, result);
+        ReadContactDetails(normalizedText, result);
+        ReadHealthAidStatus(normalizedText, result);
         return result;
     }
 
-    // Tarihi bilinen biçimlerden biriyle okuma
-    private static DateTime? ReadDate(string text, params string[] labels)
+    private static void ReadIdentityAndNationality(string text, DocumentReadResult result)
     {
-        string value = ReadValue(text, labels);
-        string[] formats = new string[] { "d.M.yyyy", "dd.MM.yyyy", "d/M/yyyy", "dd/MM/yyyy", "yyyy-MM-dd" };
+        string value = ReadValue(text, "T.C. KİMLİK NO / UYRUĞU", "T.C. KİMLİK NO/UYRUĞU");
+        Match identity = Regex.Match(value, @"(?<!\d)\d{11}(?!\d)");
 
-        bool dateFound = DateTime.TryParseExact(
-            value,
-            formats,
-            TurkishCulture,
-            DateTimeStyles.None,
-            out DateTime date);
+        if (identity.Success) result.IdentityNumber = identity.Value;
 
-        if (dateFound)
-        {
-            return date;
-        }
-
-        return null;
+        if (value.Contains("yabancı", StringComparison.OrdinalIgnoreCase) ||
+            identity.Success && identity.Value.StartsWith("99"))
+            result.Nationality = "Foreign";
+        else if (value.Contains("T.C.", StringComparison.OrdinalIgnoreCase) || identity.Success)
+            result.Nationality = "TC";
     }
 
-    // Başlık ile sonraki başlık arasındaki değeri bulma
+    private static void ReadInternshipCounts(string text, DocumentReadResult result)
+    {
+        string previousDays = ReadValue(text, "DAHA ÖNCE YAPTIĞI STAJ GÜN SAYISI");
+        if (int.TryParse(previousDays, NumberStyles.Integer, TurkishCulture, out int parsedPreviousDays))
+            result.PreviousInternshipDays = parsedPreviousDays;
+
+        string totalDays = ReadValue(text, "STAJ GÜN SAYISI");
+        if (int.TryParse(totalDays, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsedTotalDays))
+            result.InternshipDayCount = parsedTotalDays;
+    }
+
+    private static void ReadContactDetails(string text, DocumentReadResult result)
+    {
+        string value = ReadValue(text, "E-POSTA ADRESİ / TELEFON NO", "E-POSTA ADRESİ/TELEFON NO");
+        Match email = Regex.Match(value, @"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}");
+        Match phone = Regex.Match(value, @"(?:\+?90\s*)?0?\d[\d\s()/-]{8,15}");
+
+        if (email.Success) result.Email = email.Value;
+        if (phone.Success) result.PhoneNumber = Regex.Replace(phone.Value, @"\s+", " ").Trim();
+    }
+
+    private static void ReadHealthAidStatus(string text, DocumentReadResult result)
+    {
+        MatchCollection selectedOptions = Regex.Matches(
+            ReadValue(text, "SAĞLIK YARDIM STATÜSÜ"),
+            @"(?<!\d)([1-6])\s*[-.)]?\s*[☒☑✓✔]");
+
+        if (selectedOptions.Count == 1 &&
+            int.TryParse(selectedOptions[0].Groups[1].Value, out int status))
+            result.HealthAidStatus = status;
+    }
+
+    private static DateTime? ReadDate(string text, params string[] labels) =>
+        DateTime.TryParseExact(
+            ReadValue(text, labels), DateFormats, TurkishCulture, DateTimeStyles.None, out DateTime date)
+            ? date
+            : null;
+
+    private static string NormalizeDocumentText(string text)
+    {
+        string normalized = Regex.Replace(text, @"\s*/\s*", "/");
+        normalized = Regex.Replace(normalized, @"\s+", " ").Trim();
+        return Regex.Replace(normalized, @"TARİH\s+İ\b", "TARİHİ", RegexOptions.IgnoreCase);
+    }
+
     private static string ReadValue(string text, params string[] labels)
     {
-        // Başlıklardaki boşluk farklarını düzenleme
-        string normalizedText = Regex.Replace(text, @"\s*/\s*", "/");
-        normalizedText = Regex.Replace(normalizedText, @"\s+", " ").Trim();
-        normalizedText = Regex.Replace(normalizedText, @"TARİH\s+İ\b", "TARİHİ", RegexOptions.IgnoreCase);
-        Match? selectedMatch = null;
-
-        // Aranan başlığın metindeki yerini bulma
+        Match? selected = null;
         foreach (string label in labels)
         {
-            string labelPattern = LabelPattern(label);
-            string prefix = "";
-            if (label == "STAJ GÜN SAYISI")
-            {
-                // Toplam gün başlığını önceki staj günü başlığıyla karıştırmama
-                prefix = @"(?<!DAHA ÖNCE YAPTIĞI )";
-            }
+            string prefix = label == "STAJ GÜN SAYISI" ? @"(?<!DAHA ÖNCE YAPTIĞI )" : "";
             Match match = Regex.Match(
-                normalizedText,
-                $@"{prefix}(?<![\p{{L}}]){labelPattern}(?![\p{{L}}])\s*[:：-]?\s*",
+                text,
+                $@"{prefix}(?<![\p{{L}}]){LabelPattern(label)}(?![\p{{L}}])\s*[:：-]?\s*",
                 RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
-            if (match.Success && (selectedMatch is null || match.Index < selectedMatch.Index))
-            {
-                selectedMatch = match;
-            }
+            if (match.Success && (selected is null || match.Index < selected.Index))
+                selected = match;
         }
 
-        if (selectedMatch is null)
-        {
-            return "";
-        }
+        if (selected is null) return "";
 
-        int valueStart = selectedMatch.Index + selectedMatch.Length;
-        int valueEnd = normalizedText.Length;
-
-        // Sonraki başlığı bularak değerin bittiği yeri belirleme
-        foreach (string nextLabel in Labels)
+        int valueStart = selected.Index + selected.Length;
+        int valueEnd = text.Length;
+        foreach (string label in Labels)
         {
-            Match nextMatch = Regex.Match(
-                normalizedText.Substring(valueStart),
-                $@"(?<![\p{{L}}]){LabelPattern(nextLabel)}(?![\p{{L}}])",
+            Match next = Regex.Match(
+                text[valueStart..],
+                $@"(?<![\p{{L}}]){LabelPattern(label)}(?![\p{{L}}])",
                 RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
-            if (nextMatch.Success)
-            {
-                valueEnd = Math.Min(valueEnd, valueStart + nextMatch.Index);
-            }
+            if (next.Success) valueEnd = Math.Min(valueEnd, valueStart + next.Index);
         }
 
-        string value = normalizedText.Substring(valueStart, valueEnd - valueStart);
-        return value.Trim(' ', ':', '-', '–', '—', '.', '\t');
+        return text[valueStart..valueEnd].Trim(' ', ':', '-', '–', '—', '.', '\t');
     }
 
-    // Başlıklardaki Türkçe harf farklılıklarını aramaya hazırlama
-    private static string LabelPattern(string label)
-    {
-        return Regex.Escape(label.Replace(" / ", "/"))
+    private static string LabelPattern(string label) =>
+        Regex.Escape(label.Replace(" / ", "/"))
             .Replace("İ", "[İi]")
             .Replace("I", "[Iı]");
-    }
-
-    private static CultureInfo TurkishCulture => CultureInfo.GetCultureInfo("tr-TR");
 }

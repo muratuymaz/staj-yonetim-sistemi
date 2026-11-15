@@ -216,6 +216,12 @@ input:focus {
     grid-column: 1 / -1;
 }
 
+/* Öğrenci ve admin formlarındaki alanları aynı ölçüde gösterme */
+.form-grid .form-group > input:not([type="checkbox"]),
+.form-grid .form-group > select {
+    height: 46px;
+}
+
 select,
 textarea {
     width: 100%;
@@ -229,6 +235,7 @@ textarea {
 }
 
 textarea {
+    min-height: 96px;
     resize: vertical;
 }
 

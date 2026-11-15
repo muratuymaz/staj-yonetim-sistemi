@@ -1,6 +1,7 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using StajYonetimSistemi.Data;
+using StajYonetimSistemi.Models;
 using StajYonetimSistemi.Services;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -70,5 +71,36 @@ app.MapControllerRoute(
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Account}/{action=Index}/{id?}");
+
+// Geliştirme ortamında ilk admin hesabını oluşturma
+if (app.Environment.IsDevelopment())
+{
+    app.Lifetime.ApplicationStarted.Register(() =>
+    {
+        using IServiceScope scope = app.Services.CreateScope();
+        StajDbContext database = scope.ServiceProvider.GetRequiredService<StajDbContext>();
+        PasswordService passwordService = scope.ServiceProvider.GetRequiredService<PasswordService>();
+
+        bool adminExists = database.Users.Any(user => user.Role == "Admin");
+        bool testAccountExists = database.Users.Any(user =>
+            user.UserName == "admin" || user.Email == "admin@staj.local");
+
+        if (adminExists == false && testAccountExists == false)
+        {
+            User admin = new User();
+            admin.UserName = "admin";
+            admin.Email = "admin@staj.local";
+            admin.Role = "Admin";
+            admin.PasswordHash = passwordService.HashPassword(admin, "AdminTest!2026");
+
+            database.Users.Add(admin);
+            database.SaveChanges();
+        }
+        else if (adminExists == false)
+        {
+            app.Logger.LogWarning("Test admini oluşturulamadı: kullanıcı adı veya e-posta kullanımda.");
+        }
+    });
+}
 
 app.Run();
